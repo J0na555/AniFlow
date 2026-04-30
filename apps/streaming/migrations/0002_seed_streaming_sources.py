@@ -5,10 +5,10 @@ def seed_streaming_sources(apps, schema_editor) -> None:
     StreamingSource = apps.get_model("streaming", "StreamingSource")
     sources = [
         {
-            "name": "ExampleStream",
-            "base_url": "https://example.com",
-            "search_url_template": "https://example.com/search?q={query}",
-            "episode_pattern": "/watch/{slug}/episode-{episode}",
+            "name": "Crunchyroll",
+            "base_url": "https://www.crunchyroll.com",
+            "search_url_template": "https://www.crunchyroll.com/search?q={query}",
+            "episode_pattern": "",
             "priority": 100,
             "is_active": True,
         }
@@ -19,7 +19,7 @@ def seed_streaming_sources(apps, schema_editor) -> None:
 
 def unseed_streaming_sources(apps, schema_editor) -> None:
     StreamingSource = apps.get_model("streaming", "StreamingSource")
-    StreamingSource.objects.filter(name="ExampleStream").delete()
+    StreamingSource.objects.filter(name__in=["ExampleStream", "Crunchyroll"]).delete()
 
 
 class Migration(migrations.Migration):
