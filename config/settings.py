@@ -136,3 +136,7 @@ AUTH_USER_MODEL = "users.User"
 
 SESSION_COOKIE_SECURE = get_bool_env("COOKIE_SECURE", default=False)
 CSRF_COOKIE_SECURE = get_bool_env("COOKIE_SECURE", default=False)
+
+ANILIST_CLIENT_ID = get_env("ANILIST_CLIENT_ID", default="")
+ANILIST_CLIENT_SECRET = get_env("ANILIST_CLIENT_SECRET", default="")
+ANILIST_REDIRECT_URI = get_env("ANILIST_REDIRECT_URI", default="")
