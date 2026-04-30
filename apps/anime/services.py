@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .models import Anime
+from django.utils import timezone
+
+from .models import Anime, UserAnime
 
 
 def upsert_from_tracker_payload(payload: dict[str, Any]) -> Anime:
@@ -26,3 +28,42 @@ def upsert_from_tracker_payload(payload: dict[str, Any]) -> Anime:
         defaults=defaults,
     )
     return anime
+
+
+def normalize_tracker_status(value: str | None) -> str:
+    if not value:
+        return ""
+    normalized = value.strip().lower()
+    if normalized == "current":
+        return "watching"
+    return normalized
+
+
+def apply_progress_update(
+    user_anime: UserAnime,
+    progress: int,
+    tracker_status: str | None = None,
+) -> UserAnime:
+    status = normalize_tracker_status(tracker_status) or user_anime.status
+    if progress > 0 and user_anime.status == "planning":
+        status = "watching"
+        if not user_anime.start_date:
+            user_anime.start_date = timezone.localdate()
+
+    if user_anime.anime.episodes and progress >= user_anime.anime.episodes:
+        status = "completed"
+        if not user_anime.completed_date:
+            user_anime.completed_date = timezone.localdate()
+
+    user_anime.progress = progress
+    user_anime.status = status
+    user_anime.save(
+        update_fields=[
+            "progress",
+            "status",
+            "start_date",
+            "completed_date",
+            "updated_at",
+        ]
+    )
+    return user_anime

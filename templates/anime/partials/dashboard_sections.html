@@ -1,0 +1,148 @@
+<div
+  id="continue-watching"
+  class="section"
+  {% if oob %}hx-swap-oob="true"{% endif %}
+>
+  <h2>Continue Watching</h2>
+  {% if continue_watching %}
+    <div class="list">
+      {% for entry in continue_watching %}
+        <div class="card">
+          <strong>{% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}</strong>
+          <div class="meta">
+            Progress: {{ entry.progress }} / {{ entry.anime.episodes|default:"?" }}
+          </div>
+          <div class="actions">
+            <a href="{% url 'anime_resume' entry.anime_id %}">Resume</a>
+            <form
+              method="post"
+              hx-post="{% url 'anime_progress' entry.anime_id %}"
+              hx-swap="none"
+            >
+              {% csrf_token %}
+              <input type="number" name="progress" min="0" value="{{ entry.progress }}" />
+              <button type="submit">Update</button>
+            </form>
+            <form
+              method="post"
+              hx-post="{% url 'anime_progress' entry.anime_id %}"
+              hx-swap="none"
+            >
+              {% csrf_token %}
+              <input
+                type="hidden"
+                name="progress"
+                value="{{ entry.progress|add:1 }}"
+              />
+              <button type="submit" class="secondary">+1</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">No active shows yet.</div>
+  {% endif %}
+</div>
+
+<div
+  id="watching-list"
+  class="section"
+  {% if oob %}hx-swap-oob="true"{% endif %}
+>
+  <h2>Watching</h2>
+  {% if watching_entries %}
+    <div class="list">
+      {% for entry in watching_entries %}
+        <div class="card">
+          <strong>{% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}</strong>
+          <div class="meta">
+            Progress: {{ entry.progress }} / {{ entry.anime.episodes|default:"?" }}
+          </div>
+          <div class="actions">
+            <a href="{% url 'anime_resume' entry.anime_id %}">Resume</a>
+            <form
+              method="post"
+              hx-post="{% url 'anime_progress' entry.anime_id %}"
+              hx-swap="none"
+            >
+              {% csrf_token %}
+              <input type="number" name="progress" min="0" value="{{ entry.progress }}" />
+              <button type="submit">Update</button>
+            </form>
+            <form
+              method="post"
+              hx-post="{% url 'anime_progress' entry.anime_id %}"
+              hx-swap="none"
+            >
+              {% csrf_token %}
+              <input
+                type="hidden"
+                name="progress"
+                value="{{ entry.progress|add:1 }}"
+              />
+              <button type="submit" class="secondary">+1</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">Nothing in your watching list yet.</div>
+  {% endif %}
+</div>
+
+<div
+  id="planning-list"
+  class="section"
+  {% if oob %}hx-swap-oob="true"{% endif %}
+>
+  <h2>Planning</h2>
+  {% if planning_entries %}
+    <div class="list">
+      {% for entry in planning_entries %}
+        <div class="card">
+          <strong>{% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}</strong>
+          <div class="meta">
+            Episodes: {{ entry.anime.episodes|default:"?" }}
+          </div>
+          <div class="actions">
+            <form
+              method="post"
+              hx-post="{% url 'anime_progress' entry.anime_id %}"
+              hx-swap="none"
+            >
+              {% csrf_token %}
+              <input type="number" name="progress" min="0" value="{{ entry.progress }}" />
+              <button type="submit">Start</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">Your planning list is empty.</div>
+  {% endif %}
+</div>
+
+<div
+  id="completed-list"
+  class="section"
+  {% if oob %}hx-swap-oob="true"{% endif %}
+>
+  <h2>Completed</h2>
+  {% if completed_entries %}
+    <div class="list">
+      {% for entry in completed_entries %}
+        <div class="card">
+          <strong>{% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}</strong>
+          <div class="meta">
+            Finished: {{ entry.progress }} / {{ entry.anime.episodes|default:"?" }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">No completed titles yet.</div>
+  {% endif %}
+</div>

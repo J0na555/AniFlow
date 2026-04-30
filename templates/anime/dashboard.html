@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Aniflow Dashboard{% endblock %}
+
+{% block content %}
+  {% if unauthenticated %}
+    <div class="section">
+      <h2>Connect AniList</h2>
+      <p class="meta">Sign in to sync your list and start tracking progress.</p>
+      <a class="actions" href="{% url 'anilist_login' %}">Connect AniList</a>
+    </div>
+  {% else %}
+    <div class="section">
+      <form method="get" action="{% url 'anime_search' %}">
+        <label>
+          <span class="meta">Search anime or jump to a streaming site</span>
+          <div class="actions">
+            <input type="text" name="q" placeholder="Search anime titles" />
+            <button type="submit">Search</button>
+          </div>
+        </label>
+      </form>
+      <form
+        method="post"
+        hx-post="{% url 'sync_list' %}"
+        hx-swap="none"
+        class="actions"
+      >
+        {% csrf_token %}
+        <button type="submit" class="secondary">Sync AniList</button>
+      </form>
+    </div>
+    {% include "anime/partials/dashboard_sections.html" %}
+  {% endif %}
+{% endblock %}

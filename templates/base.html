@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Aniflow{% endblock %}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      a {
+        color: #38bdf8;
+      }
+      header {
+        padding: 24px 32px;
+        border-bottom: 1px solid #1e293b;
+      }
+      main {
+        padding: 24px 32px 48px;
+      }
+      .section {
+        margin-bottom: 32px;
+      }
+      .card {
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+      }
+      .list {
+        display: grid;
+        gap: 12px;
+      }
+      .meta {
+        color: #94a3b8;
+        font-size: 0.9rem;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+      input[type="number"] {
+        width: 72px;
+        padding: 6px;
+        background: #0b1120;
+        border: 1px solid #334155;
+        color: #e2e8f0;
+        border-radius: 6px;
+      }
+      button {
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #475569;
+      }
+      .empty {
+        color: #94a3b8;
+        padding: 12px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Aniflow</h1>
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>
