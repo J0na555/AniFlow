@@ -3,3 +3,5 @@ psycopg[binary]>=3.2.10
 httpx==0.28.1
 rapidfuzz==3.13.0
 requests-oauthlib==2.0.0
+gunicorn==23.0.0
+whitenoise==6.9.0

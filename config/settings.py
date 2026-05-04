@@ -64,12 +64,17 @@ DEBUG = get_bool_env("DEBUG", default=False)
 
 ALLOWED_HOSTS = [
     host.strip()
-    for host in get_env("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    for host in get_env("ALLOWED_HOSTS", "localhost,127.0.0.1,.onrender.com").split(",")
     if host.strip()
 ]
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in get_env("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+    if origin.strip()
+]
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in get_env("CSRF_TRUSTED_ORIGINS", "").split(",")
     if origin.strip()
 ]
 
@@ -95,6 +100,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "config.cors.SimpleCorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -138,12 +144,15 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "users.User"
 
 SESSION_COOKIE_SECURE = get_bool_env("COOKIE_SECURE", default=False)
 CSRF_COOKIE_SECURE = get_bool_env("COOKIE_SECURE", default=False)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 ANILIST_CLIENT_ID = get_env("ANILIST_CLIENT_ID", default="")
 ANILIST_CLIENT_SECRET = get_env("ANILIST_CLIENT_SECRET", default="")
