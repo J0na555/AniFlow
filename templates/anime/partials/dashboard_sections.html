@@ -1,4 +1,53 @@
 <div
+  id="productivity-overview"
+  class="section"
+  {% if oob %}hx-swap-oob="true"{% endif %}
+>
+  <h2>Productivity</h2>
+  <div class="list">
+    <div class="card">
+      <strong>Completion rate</strong>
+      <div class="meta">{{ productivity_stats.completion_rate }}%</div>
+    </div>
+    <div class="card">
+      <strong>Currently watching</strong>
+      <div class="meta">{{ productivity_stats.watching_count }}</div>
+    </div>
+    <div class="card">
+      <strong>Weekly episodes tracked</strong>
+      <div class="meta">{{ productivity_stats.weekly_episodes }}</div>
+    </div>
+  </div>
+</div>
+
+<div
+  id="watching-limit-warning"
+  class="section"
+  {% if oob %}hx-swap-oob="true"{% endif %}
+>
+  {% if watching_limit.enabled %}
+    <h2>Watching limit</h2>
+    <div class="card">
+      <strong>{{ watching_limit.message }}</strong>
+      {% if watching_limit_error %}
+        <div class="meta">{{ watching_limit_error }}</div>
+      {% endif %}
+      {% if watching_limit.reached %}
+        <form
+          method="post"
+          hx-post="{% url 'ignore_watching_limit' %}"
+          hx-swap="none"
+          class="actions"
+        >
+          {% csrf_token %}
+          <button type="submit" class="secondary">Override limit warnings</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<div
   id="continue-watching"
   class="section"
   {% if oob %}hx-swap-oob="true"{% endif %}

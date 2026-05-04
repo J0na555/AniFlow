@@ -9,26 +9,43 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 from apps.anime.models import Anime, UserAnime
 from apps.anime.services import apply_progress_update, normalize_tracker_status
+from apps.productivity.services import enable_watching_limit_override
+from apps.productivity.services import get_productivity_stats
+from apps.productivity.services import get_watching_limit_state
 from apps.streaming.models import AnimeStreamingMapping
 from apps.streaming.models import StreamingSource
 from apps.streaming.router import resolve_streaming_route
 from apps.streaming.sources import get_adapter_for_source
-from apps.tracker.services import update_progress
+from apps.tracker.services import update_progress as tracker_update_progress
 from apps.tracker.services import sync_user_list
 
 
-def _build_dashboard_context(user, *, oob: bool = False) -> dict:
+def _build_dashboard_context(
+    user,
+    *,
+    oob: bool = False,
+    watching_limit_error: str = "",
+) -> dict:
     entries = UserAnime.objects.filter(user=user).select_related("anime")
     watching = entries.filter(status="watching").order_by("-updated_at")
     planning = entries.filter(status="planning").order_by(
         "anime__title_english", "anime__title_romaji"
     )
     completed = entries.filter(status="completed").order_by("-updated_at")
+    watching_entries = list(watching)
+    productivity_stats = get_productivity_stats(user, entries=entries)
+    watching_limit = get_watching_limit_state(
+        user,
+        watching_count=len(watching_entries),
+    )
     context = {
         "continue_watching": list(watching[:5]),
-        "watching_entries": list(watching),
+        "watching_entries": watching_entries,
         "planning_entries": list(planning),
         "completed_entries": list(completed),
+        "productivity_stats": productivity_stats,
+        "watching_limit": watching_limit,
+        "watching_limit_error": watching_limit_error,
     }
     if oob:
         context["oob"] = True
@@ -103,7 +120,21 @@ def update_progress(request, anime_id: int):
         return HttpResponseBadRequest("Invalid progress.")
 
     progress = int(raw_progress)
-    tracker_response = update_progress(
+    watching_limit = get_watching_limit_state(request.user)
+    if user_anime.status == "planning" and progress > 0 and watching_limit.reached:
+        warning_message = (
+            "Watching limit reached. Override the limit before starting another title."
+        )
+        if request.headers.get("HX-Request") == "true":
+            context = _build_dashboard_context(
+                request.user,
+                oob=True,
+                watching_limit_error=warning_message,
+            )
+            return render(request, "anime/partials/dashboard_sections.html", context)
+        return HttpResponseBadRequest(warning_message)
+
+    tracker_response = tracker_update_progress(
         request.user, user_anime.anime.tracker_id, progress
     )
     tracker_status = normalize_tracker_status(tracker_response.get("status"))
@@ -124,6 +155,16 @@ def update_progress(request, anime_id: int):
 @require_POST
 def sync_list(request):
     sync_user_list(request.user)
+    if request.headers.get("HX-Request") == "true":
+        context = _build_dashboard_context(request.user, oob=True)
+        return render(request, "anime/partials/dashboard_sections.html", context)
+    return redirect("dashboard")
+
+
+@login_required
+@require_POST
+def ignore_watching_limit(request):
+    enable_watching_limit_override(request.user)
     if request.headers.get("HX-Request") == "true":
         context = _build_dashboard_context(request.user, oob=True)
         return render(request, "anime/partials/dashboard_sections.html", context)
