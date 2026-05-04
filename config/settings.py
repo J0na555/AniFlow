@@ -84,6 +84,8 @@ INSTALLED_APPS = [
     "apps.streaming.apps.StreamingConfig",
     "apps.tracker.apps.TrackerConfig",
     "apps.productivity.apps.ProductivityConfig",
+    "apps.recommendations.apps.RecommendationsConfig",
+    "apps.releases.apps.ReleasesConfig",
 ]
 
 MIDDLEWARE = [

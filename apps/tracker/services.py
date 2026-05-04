@@ -45,3 +45,13 @@ def update_progress(user, tracker_id: str, progress: int) -> dict[str, Any]:
     adapter = get_adapter_for_user(user)
     response = adapter.update_progress(user, tracker_id, progress)
     return response
+
+
+def get_recommendations(user, *, limit: int = 10) -> list[dict[str, Any]]:
+    adapter = get_adapter_for_user(user)
+    return adapter.get_recommendations(user, limit=limit)
+
+
+def get_weekly_releases(user, *, limit: int = 10) -> list[dict[str, Any]]:
+    adapter = get_adapter_for_user(user)
+    return adapter.get_weekly_releases(user, limit=limit)

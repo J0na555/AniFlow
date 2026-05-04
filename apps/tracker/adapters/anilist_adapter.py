@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from datetime import date
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 from decimal import Decimal
 
 import httpx
@@ -56,6 +59,46 @@ mutation UpdateProgress($mediaId: Int!, $progress: Int!) {
 }
 """
 
+RECOMMENDATIONS_QUERY = """
+query Recommendations($perPage: Int) {
+  Page(page: 1, perPage: $perPage) {
+    recommendations(sort: RATING_DESC, onList: true) {
+      rating
+      mediaRecommendation {
+        id
+        title { romaji english native }
+        episodes
+        season
+        seasonYear
+        coverImage { large }
+      }
+    }
+  }
+}
+"""
+
+WEEKLY_RELEASES_QUERY = """
+query WeeklyReleases($from: Int, $to: Int, $perPage: Int) {
+  Page(page: 1, perPage: $perPage) {
+    airingSchedules(
+      airingAt_greater: $from
+      airingAt_lesser: $to
+      sort: TIME
+    ) {
+      episode
+      airingAt
+      media {
+        id
+        title { romaji english native }
+        episodes
+        format
+        coverImage { large }
+      }
+    }
+  }
+}
+"""
+
 
 def _parse_date(raw: dict | None) -> date | None:
     if not raw:
@@ -75,6 +118,11 @@ def _normalize_status(raw: str | None) -> str:
     if value == "current":
         return "watching"
     return value
+
+
+def _preferred_title(raw: dict | None) -> str:
+    titles = raw or {}
+    return titles.get("english") or titles.get("romaji") or titles.get("native") or ""
 
 
 class AniListAdapter(TrackerAdapter):
@@ -151,3 +199,65 @@ class AniListAdapter(TrackerAdapter):
             {"mediaId": int(tracker_id), "progress": progress},
         )
         return data["SaveMediaListEntry"]
+
+    def get_recommendations(self, user, limit: int = 10) -> list[dict]:
+        data = self._request(user, RECOMMENDATIONS_QUERY, {"perPage": limit})
+        page = data.get("Page") or {}
+        recommendations: list[dict] = []
+        seen_tracker_ids: set[str] = set()
+        for candidate in page.get("recommendations", []):
+            media = candidate.get("mediaRecommendation") or {}
+            media_id = media.get("id")
+            if not media_id:
+                continue
+            tracker_id = str(media_id)
+            if tracker_id in seen_tracker_ids:
+                continue
+            seen_tracker_ids.add(tracker_id)
+            recommendations.append(
+                {
+                    "tracker_id": tracker_id,
+                    "title": _preferred_title(media.get("title")),
+                    "episodes": media.get("episodes"),
+                    "season": (media.get("season") or "").lower(),
+                    "season_year": media.get("seasonYear"),
+                    "cover_image_url": (media.get("coverImage") or {}).get("large") or "",
+                    "score": candidate.get("rating"),
+                }
+            )
+        return recommendations
+
+    def get_weekly_releases(self, user, limit: int = 10) -> list[dict]:
+        now = datetime.now(timezone.utc)
+        window_end = now + timedelta(days=7)
+        data = self._request(
+            user,
+            WEEKLY_RELEASES_QUERY,
+            {
+                "from": int(now.timestamp()),
+                "to": int(window_end.timestamp()),
+                "perPage": limit,
+            },
+        )
+        page = data.get("Page") or {}
+        releases: list[dict] = []
+        for schedule in page.get("airingSchedules", []):
+            media = schedule.get("media") or {}
+            media_id = media.get("id")
+            if not media_id:
+                continue
+            airing_at = schedule.get("airingAt")
+            if not airing_at:
+                continue
+            releases.append(
+                {
+                    "tracker_id": str(media_id),
+                    "title": _preferred_title(media.get("title")),
+                    "episode": schedule.get("episode"),
+                    "episodes": media.get("episodes"),
+                    "format": (media.get("format") or "").lower(),
+                    "cover_image_url": (media.get("coverImage") or {}).get("large") or "",
+                    "airing_at": datetime.fromtimestamp(airing_at, tz=timezone.utc),
+                }
+            )
+        return releases

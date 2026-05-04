@@ -1,5 +1,5 @@
-django
-psycopg[binary]
-httpx
-rapidfuzz
-requests-oauthlib
+Django==5.2.1
+psycopg[binary]==3.2.1
+httpx==0.28.1
+rapidfuzz==3.13.0
+requests-oauthlib==2.0.0

@@ -12,6 +12,8 @@ from apps.anime.services import apply_progress_update, normalize_tracker_status
 from apps.productivity.services import enable_watching_limit_override
 from apps.productivity.services import get_productivity_stats
 from apps.productivity.services import get_watching_limit_state
+from apps.recommendations.services import get_recommendations
+from apps.releases.services import get_weekly_releases
 from apps.streaming.models import AnimeStreamingMapping
 from apps.streaming.models import StreamingSource
 from apps.streaming.router import resolve_streaming_route
@@ -46,6 +48,8 @@ def _build_dashboard_context(
         "productivity_stats": productivity_stats,
         "watching_limit": watching_limit,
         "watching_limit_error": watching_limit_error,
+        "recommendations": get_recommendations(user, limit=6),
+        "weekly_releases": get_weekly_releases(user, limit=6),
     }
     if oob:
         context["oob"] = True

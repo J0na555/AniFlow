@@ -5,6 +5,8 @@ from django.db.models import Q
 from apps.anime.models import UserAnime
 from apps.anime.services import apply_progress_update
 from apps.anime.services import normalize_tracker_status
+from apps.recommendations.services import get_recommendations
+from apps.releases.services import get_weekly_releases
 from apps.streaming.router import resolve_streaming_route
 from apps.tracker.services import sync_user_list
 from apps.tracker.services import update_progress as tracker_update_progress
@@ -120,15 +122,9 @@ def update_progress_payload(user, *, anime_id: int, progress: int) -> dict:
 
 def get_recommendations_payload(user) -> dict:
     ensure_user_library_loaded(user)
-    return {
-        "items": [],
-        "message": "Recommendations are not available yet.",
-    }
+    return get_recommendations(user, limit=10)
 
 
 def get_releases_payload(user) -> dict:
     ensure_user_library_loaded(user)
-    return {
-        "items": [],
-        "message": "Weekly releases are not available yet.",
-    }
+    return get_weekly_releases(user, limit=10)

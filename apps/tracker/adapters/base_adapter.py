@@ -16,3 +16,9 @@ class TrackerAdapter(ABC):
 
     def search_anime(self, query: str) -> list[dict]:
         raise NotImplementedError
+
+    def get_recommendations(self, user, limit: int = 10) -> list[dict]:
+        raise NotImplementedError
+
+    def get_weekly_releases(self, user, limit: int = 10) -> list[dict]:
+        raise NotImplementedError

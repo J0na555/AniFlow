@@ -21,6 +21,57 @@
 </div>
 
 <div
+  id="weekly-releases"
+  class="section"
+  {% if oob %}hx-swap-oob="true"{% endif %}
+>
+  <h2>Weekly Releases</h2>
+  {% if weekly_releases.items %}
+    <div class="list">
+      {% for release in weekly_releases.items %}
+        <div class="card">
+          <strong>{{ release.title }}</strong>
+          <div class="meta">
+            Episode {{ release.episode|default:"?" }}
+            {% if release.airing_label %}
+              airs {{ release.airing_label }}
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">{{ weekly_releases.message }}</div>
+  {% endif %}
+</div>
+
+<div
+  id="recommendations"
+  class="section"
+  {% if oob %}hx-swap-oob="true"{% endif %}
+>
+  <h2>Recommendations</h2>
+  {% if recommendations.items %}
+    <div class="list">
+      {% for recommendation in recommendations.items %}
+        <div class="card">
+          <strong>{{ recommendation.title }}</strong>
+          <div class="meta">
+            {% if recommendation.episodes %}
+              {{ recommendation.episodes }} episode(s)
+            {% else %}
+              Episode count unknown
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">{{ recommendations.message }}</div>
+  {% endif %}
+</div>
+
+<div
   id="watching-limit-warning"
   class="section"
   {% if oob %}hx-swap-oob="true"{% endif %}
