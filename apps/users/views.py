@@ -81,11 +81,31 @@ def anilist_login(request: HttpRequest) -> HttpResponse:
 
 
 def anilist_callback(request: HttpRequest) -> HttpResponse:
-    expected_state = request.session.pop("anilist_oauth_state", "")
+    oauth_error = request.GET.get("error")
+    if oauth_error:
+        return HttpResponseBadRequest(
+            f"AniList authorization error: {oauth_error}"
+        )
+
+    expected_state = request.session.get("anilist_oauth_state", "")
     state = request.GET.get("state", "")
     code = request.GET.get("code", "")
     if not code or not state or state != expected_state:
-        return HttpResponseBadRequest("Invalid OAuth response.")
+        msg = "Invalid OAuth response."
+        if settings.DEBUG:
+            if not expected_state:
+                msg += (
+                    " No session state (session cookie missing or wrong site). "
+                    "Use the same host for the whole flow (localhost vs 127.0.0.1), "
+                    "and set COOKIE_SECURE=0 when using http://."
+                )
+            elif not code:
+                msg += " Missing authorization code."
+            elif state != expected_state:
+                msg += " State mismatch (retry login, avoid duplicate callback)."
+        return HttpResponseBadRequest(msg)
+
+    request.session.pop("anilist_oauth_state", None)
 
     client_id, client_secret, redirect_uri = _get_anilist_config()
     token_response = httpx.post(
