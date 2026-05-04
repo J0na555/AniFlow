@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from html import unescape
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -35,10 +36,7 @@ class GogoanimeSourceAdapter(StreamingSourceAdapter):
         return self._extract_candidates(response.text)
 
     def build_episode_url(self, slug: str, episode: int) -> str:
-        if slug.startswith("http://") or slug.startswith("https://"):
-            return slug
-
-        normalized_slug = slug.strip("/")
+        normalized_slug = self._normalize_slug(slug)
         if normalized_slug.startswith("category/"):
             normalized_slug = normalized_slug.removeprefix("category/")
 
@@ -57,14 +55,14 @@ class GogoanimeSourceAdapter(StreamingSourceAdapter):
         seen_slugs: set[str] = set()
         for block in re.findall(r"<li\b[^>]*>.*?</li>", html, flags=re.DOTALL | re.IGNORECASE):
             anchor = re.search(
-                r'<a[^>]+href="(?P<href>/category/[^"]+)"[^>]*>(?P<title>.*?)</a>',
+                r'<a[^>]+href="(?P<href>[^"]*?/category/[^"]+)"[^>]*>(?P<title>.*?)</a>',
                 block,
                 flags=re.DOTALL | re.IGNORECASE,
             )
             if not anchor:
                 continue
 
-            slug = anchor.group("href").strip().removeprefix("/category/").strip("/")
+            slug = cls._normalize_slug(anchor.group("href"))
             if not slug or slug in seen_slugs:
                 continue
 
@@ -100,3 +98,14 @@ class GogoanimeSourceAdapter(StreamingSourceAdapter):
         if not release:
             return None
         return int(release.group("year"))
+
+    @staticmethod
+    def _normalize_slug(raw_slug: str) -> str:
+        normalized = raw_slug.strip()
+        if normalized.startswith("http://") or normalized.startswith("https://"):
+            normalized = urlsplit(normalized).path
+
+        normalized = normalized.strip("/")
+        if "category/" in normalized:
+            normalized = normalized.split("category/", 1)[1]
+        return normalized.strip("/")

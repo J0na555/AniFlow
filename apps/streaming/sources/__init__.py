@@ -12,7 +12,7 @@ def get_adapter_for_source(source: StreamingSource) -> StreamingSourceAdapter:
     source_name = source.name.lower().strip()
     if source_name == "crunchyroll":
         return CrunchyrollSourceAdapter(source)
-    if source_name in {"gogoanime", "gogo anime", "anitaku"}:
+    if source_name in {"gogoanime", "gogo anime", "anitaku", "ani taku"}:
         return GogoanimeSourceAdapter(source)
     return TemplateSourceAdapter(source)
 
