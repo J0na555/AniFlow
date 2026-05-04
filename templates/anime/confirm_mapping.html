@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Streaming Match{% endblock %}
+
+{% block content %}
+  <div class="section">
+    <h2>Confirm Streaming Match</h2>
+    <p class="meta">
+      We found a possible match on {{ source.name }} for
+      <strong>{% firstof anime.title_english anime.title_romaji anime.title_native "Untitled" %}</strong>.
+    </p>
+    <div class="meta">Candidate: {{ mapping.source_identifier }}</div>
+    <div class="meta">Confidence: {{ mapping.confidence_score }}</div>
+    <div class="actions">
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit">Confirm and continue to episode {{ next_episode }}</button>
+      </form>
+      {% if search_url %}
+        <a href="{{ search_url }}" target="_blank" rel="noopener noreferrer" class="secondary">
+          Open {{ source.name }} search
+        </a>
+      {% endif %}
+      <a href="{% url 'dashboard' %}" class="secondary">Back to dashboard</a>
+    </div>
+  </div>
+{% endblock %}

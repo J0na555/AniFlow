@@ -30,6 +30,6 @@ def get_or_create_mapping(
         source=source,
         source_identifier=match.candidate.slug,
         confidence_score=Decimal(str(round(match.score, 3))),
-        verified=False,
+        verified=not match.needs_confirmation,
     )
     return mapping, True

@@ -7,7 +7,8 @@ from apps.streaming.sources.base_source import StreamingSourceAdapter
 from apps.streaming.types import AnimeMetadata, StreamingCandidate, StreamingMatch
 
 
-MATCH_THRESHOLD = 0.75
+AUTO_VERIFY_THRESHOLD = 0.87
+CONFIRMATION_THRESHOLD = 0.72
 
 
 def build_metadata(anime: Anime) -> AnimeMetadata:
@@ -56,10 +57,10 @@ def _studio_score(metadata: AnimeMetadata, candidate: StreamingCandidate) -> flo
 
 
 def score_candidate(metadata: AnimeMetadata, candidate: StreamingCandidate) -> float:
-    title_weight = 0.7
-    year_weight = 0.1
-    episode_weight = 0.1
-    studio_weight = 0.1
+    title_weight = 0.65
+    year_weight = 0.15
+    episode_weight = 0.15
+    studio_weight = 0.05
     return (
         _title_score(metadata, candidate) * title_weight
         + _year_score(metadata, candidate) * year_weight
@@ -78,6 +79,10 @@ def match_anime(anime: Anime, adapter: StreamingSourceAdapter) -> StreamingMatch
         return None
     best_candidate = max(candidates, key=lambda candidate: score_candidate(metadata, candidate))
     best_score = score_candidate(metadata, best_candidate)
-    if best_score < MATCH_THRESHOLD:
+    if best_score < CONFIRMATION_THRESHOLD:
         return None
-    return StreamingMatch(candidate=best_candidate, score=best_score)
+    return StreamingMatch(
+        candidate=best_candidate,
+        score=best_score,
+        needs_confirmation=best_score < AUTO_VERIFY_THRESHOLD,
+    )

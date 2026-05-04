@@ -4,13 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
+from django.urls import reverse
+from django.views.decorators.http import require_POST, require_http_methods
 
 from apps.anime.models import Anime, UserAnime
 from apps.anime.services import apply_progress_update, normalize_tracker_status
+from apps.streaming.models import AnimeStreamingMapping
+from apps.streaming.models import StreamingSource
 from apps.streaming.router import resolve_streaming_route
 from apps.streaming.sources import get_adapter_for_source
-from apps.streaming.models import StreamingSource
 from apps.tracker.services import update_progress
 from apps.tracker.services import sync_user_list
 
@@ -44,6 +46,17 @@ def dashboard(request):
     return render(request, "anime/dashboard.html", context)
 
 
+def _confirmation_redirect(anime_id: int, source_id: int, next_episode: int):
+    confirmation_url = reverse(
+        "anime_confirm_mapping",
+        kwargs={
+            "anime_id": anime_id,
+            "source_id": source_id,
+        },
+    )
+    return redirect(f"{confirmation_url}?next_episode={next_episode}")
+
+
 @login_required
 def resume_anime(request, anime_id: int):
     user_anime = get_object_or_404(UserAnime, user=request.user, anime_id=anime_id)
@@ -52,6 +65,12 @@ def resume_anime(request, anime_id: int):
 
     next_episode = user_anime.progress + 1
     route = resolve_streaming_route(request.user, user_anime.anime, next_episode)
+    if route.needs_confirmation and route.source:
+        return _confirmation_redirect(
+            anime_id=user_anime.anime_id,
+            source_id=route.source.id,
+            next_episode=next_episode,
+        )
     if route.url:
         return redirect(route.url)
     if route.search_url:
@@ -62,6 +81,12 @@ def resume_anime(request, anime_id: int):
 def play_anime(request, anime_id: int):
     anime = get_object_or_404(Anime, id=anime_id)
     route = resolve_streaming_route(request.user, anime, next_episode=1)
+    if route.needs_confirmation and route.source:
+        return _confirmation_redirect(
+            anime_id=anime.id,
+            source_id=route.source.id,
+            next_episode=1,
+        )
     if route.url:
         return redirect(route.url)
     if route.search_url:
@@ -103,6 +128,38 @@ def sync_list(request):
         context = _build_dashboard_context(request.user, oob=True)
         return render(request, "anime/partials/dashboard_sections.html", context)
     return redirect("dashboard")
+
+
+@require_http_methods(["GET", "POST"])
+def confirm_streaming_mapping(request, anime_id: int, source_id: int):
+    anime = get_object_or_404(Anime, id=anime_id)
+    source = get_object_or_404(StreamingSource, id=source_id, is_active=True)
+    mapping = get_object_or_404(
+        AnimeStreamingMapping,
+        anime=anime,
+        source=source,
+    )
+    adapter = get_adapter_for_source(source)
+
+    next_episode = request.GET.get("next_episode", "1").strip()
+    if not next_episode.isdigit():
+        next_episode = "1"
+    next_episode_int = max(int(next_episode), 1)
+
+    if request.method == "POST":
+        mapping.verified = True
+        mapping.save(update_fields=["verified", "updated_at"])
+        return redirect(adapter.build_episode_url(mapping.source_identifier, next_episode_int))
+
+    primary_title = anime.title_english or anime.title_romaji or anime.title_native or ""
+    context = {
+        "anime": anime,
+        "source": source,
+        "mapping": mapping,
+        "next_episode": next_episode_int,
+        "search_url": adapter.build_search_url(primary_title) if primary_title else None,
+    }
+    return render(request, "anime/confirm_mapping.html", context)
 
 
 def search_anime(request):

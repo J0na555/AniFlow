@@ -7,6 +7,11 @@ urlpatterns = [
     path("anime/<int:anime_id>/resume/", views.resume_anime, name="anime_resume"),
     path("anime/<int:anime_id>/play/", views.play_anime, name="anime_play"),
     path(
+        "anime/<int:anime_id>/mapping/<int:source_id>/confirm/",
+        views.confirm_streaming_mapping,
+        name="anime_confirm_mapping",
+    ),
+    path(
         "anime/<int:anime_id>/progress/",
         views.update_progress,
         name="anime_progress",

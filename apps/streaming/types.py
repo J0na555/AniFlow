@@ -30,3 +30,4 @@ class StreamingCandidate:
 class StreamingMatch:
     candidate: StreamingCandidate
     score: float
+    needs_confirmation: bool
