@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import secrets
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import httpx
 from django.conf import settings
@@ -9,7 +9,6 @@ from django.contrib.auth import get_user_model, login
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
-from django.urls import reverse
 
 from apps.tracker.adapters.anilist_adapter import ANILIST_API_URL
 from apps.tracker.services import TRACKER_TYPE_ANILIST, sync_user_list
@@ -18,6 +17,8 @@ from .models import UserSettings
 
 ANILIST_AUTHORIZE_URL = "https://anilist.co/api/v2/oauth/authorize"
 ANILIST_TOKEN_URL = "https://anilist.co/api/v2/oauth/token"
+
+POST_LOGIN_REDIRECT_SESSION_KEY = "post_login_redirect"
 
 VIEWER_QUERY = """
 query Viewer {
@@ -36,6 +37,28 @@ def _get_anilist_config() -> tuple[str, str, str]:
     if not (client_id and client_secret and redirect_uri):
         raise ImproperlyConfigured("AniList OAuth env vars are not configured.")
     return client_id, client_secret, redirect_uri
+
+
+def _safe_post_login_redirect(candidate: str) -> str | None:
+    """Return ``candidate`` if it's safe to redirect to, otherwise ``None``.
+
+    A redirect target is considered safe when its scheme+host (origin) matches
+    one of ``settings.FRONTEND_ALLOWED_REDIRECT_ORIGINS``. This guards against
+    open-redirect abuse where an attacker passes ``?next=https://evil.com/``.
+    """
+    if not candidate:
+        return None
+    parsed = urlparse(candidate)
+    if not parsed.scheme or not parsed.netloc:
+        return None
+    candidate_origin = f"{parsed.scheme}://{parsed.netloc}"
+    allowed = {
+        origin.rstrip("/")
+        for origin in getattr(settings, "FRONTEND_ALLOWED_REDIRECT_ORIGINS", [])
+    }
+    if candidate_origin.rstrip("/") not in allowed:
+        return None
+    return candidate
 
 
 def _fetch_viewer(access_token: str) -> dict:
@@ -69,6 +92,22 @@ def anilist_login(request: HttpRequest) -> HttpResponse:
     client_id, _, redirect_uri = _get_anilist_config()
     state = secrets.token_urlsafe(16)
     request.session["anilist_oauth_state"] = state
+
+    next_param = (
+        request.GET.get("next")
+        or request.GET.get("redirect")
+        or request.GET.get("redirect_uri")
+        or request.GET.get("return_to")
+        or request.GET.get("return_url")
+        or request.GET.get("callback")
+        or ""
+    )
+    safe_next = _safe_post_login_redirect(next_param)
+    if safe_next:
+        request.session[POST_LOGIN_REDIRECT_SESSION_KEY] = safe_next
+    else:
+        request.session.pop(POST_LOGIN_REDIRECT_SESSION_KEY, None)
+
     params = urlencode(
         {
             "client_id": client_id,
@@ -152,6 +191,14 @@ def anilist_callback(request: HttpRequest) -> HttpResponse:
     UserSettings.objects.get_or_create(user=user)
     login(request, user, backend="django.contrib.auth.backends.ModelBackend")
     sync_user_list(user)
+
+    stored_target = request.session.pop(POST_LOGIN_REDIRECT_SESSION_KEY, "")
+    target = _safe_post_login_redirect(stored_target)
+    if target:
+        return redirect(target)
+    frontend_url = getattr(settings, "FRONTEND_URL", "")
+    if frontend_url:
+        return redirect(frontend_url)
     return redirect("dashboard")
 
 

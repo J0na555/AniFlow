@@ -79,6 +79,16 @@ CSRF_TRUSTED_ORIGINS = [
     if origin.strip()
 ]
 
+FRONTEND_URL = get_env("FRONTEND_URL", default="http://localhost:3000")
+FRONTEND_ALLOWED_REDIRECT_ORIGINS = [
+    origin.strip()
+    for origin in get_env(
+        "FRONTEND_ALLOWED_REDIRECT_ORIGINS",
+        ",".join([FRONTEND_URL, *CORS_ALLOWED_ORIGINS]),
+    ).split(",")
+    if origin.strip()
+]
+
 DATABASE_URL = get_env("DATABASE_URL", required=True)
 DATABASES = {"default": parse_database_url(DATABASE_URL)}
 
@@ -153,6 +163,13 @@ AUTH_USER_MODEL = "users.User"
 
 SESSION_COOKIE_SECURE = get_bool_env("COOKIE_SECURE", default=False)
 CSRF_COOKIE_SECURE = get_bool_env("COOKIE_SECURE", default=False)
+# Cross-site cookie behavior. When the SPA lives on a different origin than
+# the API (e.g. localhost:3000 -> aniflow-36tm.onrender.com), the session
+# cookie set during the AniList OAuth dance must use SameSite=None so the
+# browser sends it back on subsequent credentialed requests. SameSite=None
+# requires Secure=True, so COOKIE_SECURE must also be enabled in that case.
+SESSION_COOKIE_SAMESITE = get_env("COOKIE_SAMESITE", default="Lax") or "Lax"
+CSRF_COOKIE_SAMESITE = get_env("COOKIE_SAMESITE", default="Lax") or "Lax"
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 ANILIST_CLIENT_ID = get_env("ANILIST_CLIENT_ID", default="")
