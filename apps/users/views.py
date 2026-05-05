@@ -152,7 +152,7 @@ def anilist_callback(request: HttpRequest) -> HttpResponse:
     UserSettings.objects.get_or_create(user=user)
     login(request, user, backend="django.contrib.auth.backends.ModelBackend")
     sync_user_list(user)
-    return redirect(reverse("anilist_complete"))
+    return redirect("dashboard")
 
 
 def anilist_complete(request: HttpRequest) -> HttpResponse:
