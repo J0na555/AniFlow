@@ -1,3 +1,4 @@
+# Force reload for .env changes
 import os
 from pathlib import Path
 from typing import Any
