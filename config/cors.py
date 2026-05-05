@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Iterable
 
 
@@ -27,13 +28,33 @@ class SimpleCorsMiddleware:
 
     def _apply_cors_headers(self, request, response):
         origin = request.headers.get("Origin", "")
-        allowed_origins: Iterable[str] = getattr(request, "cors_allowed_origins", None) or []
-        if not allowed_origins:
-            from django.conf import settings
+        if not origin:
+            return response
 
-            allowed_origins = getattr(settings, "CORS_ALLOWED_ORIGINS", [])
+        from django.conf import settings
 
-        if origin and origin in set(allowed_origins):
+        allowed_origins: Iterable[str] = (
+            getattr(request, "cors_allowed_origins", None)
+            or getattr(settings, "CORS_ALLOWED_ORIGINS", [])
+        )
+        # Strip a trailing slash from the configured origin AND from the
+        # incoming Origin header — the spec says the header has no slash, but
+        # being defensive here saves a lot of head-scratching when somebody
+        # pastes "https://app.example.com/" into the env var.
+        normalized_origin = origin.rstrip("/")
+        normalized_allowed = {value.rstrip("/") for value in allowed_origins}
+
+        is_allowed = normalized_origin in normalized_allowed
+        if not is_allowed:
+            for pattern in getattr(settings, "CORS_ALLOWED_ORIGIN_REGEXES", []):
+                try:
+                    if re.fullmatch(pattern, normalized_origin):
+                        is_allowed = True
+                        break
+                except re.error:
+                    continue
+
+        if is_allowed:
             response["Access-Control-Allow-Origin"] = origin
             response["Access-Control-Allow-Credentials"] = "true"
             response["Vary"] = "Origin"

@@ -68,25 +68,49 @@ ALLOWED_HOSTS = [
     for host in get_env("ALLOWED_HOSTS", "localhost,127.0.0.1,.onrender.com").split(",")
     if host.strip()
 ]
+def _normalize_origin(value: str) -> str:
+    """Trim whitespace and any trailing slash from an origin string.
+
+    The HTTP ``Origin`` header is always ``scheme://host[:port]`` with no
+    trailing slash, so a config value like ``https://example.com/`` would
+    silently never match. Normalize on the way in so operators can be sloppy.
+    """
+    return value.strip().rstrip("/")
+
+
 CORS_ALLOWED_ORIGINS = [
-    origin.strip()
-    for origin in get_env("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
-    if origin.strip()
+    origin
+    for origin in (
+        _normalize_origin(o)
+        for o in get_env("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+    )
+    if origin
+]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    pattern.strip()
+    for pattern in get_env("CORS_ALLOWED_ORIGIN_REGEXES", "").split(",")
+    if pattern.strip()
 ]
 CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in get_env("CSRF_TRUSTED_ORIGINS", "").split(",")
-    if origin.strip()
+    origin
+    for origin in (
+        _normalize_origin(o)
+        for o in get_env("CSRF_TRUSTED_ORIGINS", "").split(",")
+    )
+    if origin
 ]
 
-FRONTEND_URL = get_env("FRONTEND_URL", default="http://localhost:3000")
+FRONTEND_URL = _normalize_origin(get_env("FRONTEND_URL", default="http://localhost:3000"))
 FRONTEND_ALLOWED_REDIRECT_ORIGINS = [
-    origin.strip()
-    for origin in get_env(
-        "FRONTEND_ALLOWED_REDIRECT_ORIGINS",
-        ",".join([FRONTEND_URL, *CORS_ALLOWED_ORIGINS]),
-    ).split(",")
-    if origin.strip()
+    origin
+    for origin in (
+        _normalize_origin(o)
+        for o in get_env(
+            "FRONTEND_ALLOWED_REDIRECT_ORIGINS",
+            ",".join([FRONTEND_URL, *CORS_ALLOWED_ORIGINS]),
+        ).split(",")
+    )
+    if origin
 ]
 
 DATABASE_URL = get_env("DATABASE_URL", required=True)
