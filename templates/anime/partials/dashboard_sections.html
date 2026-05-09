@@ -1,281 +1,247 @@
 {% load anime_extras %}
 
 <!-- Productivity Overview -->
-<div id="productivity-overview" class="mb-12" {% if oob %}hx-swap-oob="true"{% endif %}>
-  <div class="flex items-center gap-2 mb-4">
-    <i data-lucide="trending-up" class="w-4 h-4 text-accent"></i>
-    <h2 class="text-sm font-semibold text-muted uppercase tracking-wider">Productivity</h2>
+<div id="productivity-overview" class="mb-16" {% if oob %}hx-swap-oob="true"{% endif %}>
+  <div class="flex items-center gap-2 mb-6">
+    <div class="w-1.5 h-6 bg-accent rounded-full"></div>
+    <h2 class="text-sm font-bold text-white uppercase tracking-[0.2em]">Productivity</h2>
   </div>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="card-base p-6 flex flex-col justify-between h-32">
-      <div class="flex items-center justify-between">
-        <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-          <i data-lucide="check-circle-2" class="w-5 h-5 text-accent"></i>
+    <div class="card-base p-8 flex flex-col justify-between h-40 relative group overflow-hidden">
+      <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+        <i data-lucide="check-circle-2" class="w-20 h-20 text-accent"></i>
+      </div>
+      <div class="flex items-center justify-between relative z-10">
+        <div class="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center border border-accent/20">
+          <i data-lucide="check-circle-2" class="w-6 h-6 text-accent"></i>
         </div>
-        <span class="text-xs font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+        <span class="text-xs font-bold text-accent bg-accent/10 px-3 py-1 rounded-full flex items-center gap-1 border border-accent/20">
           <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
           2.3%
         </span>
       </div>
-      <div>
-        <div class="text-xs text-muted font-medium mb-1">Completion Rate</div>
-        <div class="text-2xl font-bold">{{ productivity_stats.completion_rate }}%</div>
+      <div class="relative z-10">
+        <div class="text-xs text-muted font-bold uppercase tracking-wider mb-1">Completion Rate</div>
+        <div class="text-3xl font-black">{{ productivity_stats.completion_rate }}%</div>
       </div>
     </div>
 
-    <div class="card-base p-6 flex flex-col justify-between h-32">
-      <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-        <i data-lucide="eye" class="w-5 h-5 text-accent"></i>
+    <div class="card-base p-8 flex flex-col justify-between h-40 relative group overflow-hidden">
+      <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+        <i data-lucide="eye" class="w-20 h-20 text-blue-500"></i>
       </div>
-      <div>
-        <div class="text-xs text-muted font-medium mb-1">Currently Watching</div>
-        <div class="text-2xl font-bold">{{ productivity_stats.watching_count }}</div>
+      <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 relative z-10">
+        <i data-lucide="eye" class="w-6 h-6 text-blue-500"></i>
+      </div>
+      <div class="relative z-10">
+        <div class="text-xs text-muted font-bold uppercase tracking-wider mb-1">Currently Watching</div>
+        <div class="text-3xl font-black">{{ productivity_stats.watching_count }}</div>
       </div>
     </div>
 
-    <div class="card-base p-6 flex flex-col justify-between h-32">
-      <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-        <i data-lucide="calendar-days" class="w-5 h-5 text-accent"></i>
+    <div class="card-base p-8 flex flex-col justify-between h-40 relative group overflow-hidden">
+      <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+        <i data-lucide="calendar-days" class="w-20 h-20 text-purple-500"></i>
       </div>
-      <div>
-        <div class="text-xs text-muted font-medium mb-1">Weekly Episodes</div>
-        <div class="text-2xl font-bold">{{ productivity_stats.weekly_episodes }}</div>
-        <div class="text-[10px] text-muted mt-1">Tracked this week</div>
+      <div class="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 relative z-10">
+        <i data-lucide="calendar-days" class="w-6 h-6 text-purple-500"></i>
+      </div>
+      <div class="relative z-10">
+        <div class="text-xs text-muted font-bold uppercase tracking-wider mb-1">Weekly Episodes</div>
+        <div class="flex items-baseline gap-2">
+          <div class="text-3xl font-black">{{ productivity_stats.weekly_episodes }}</div>
+          <div class="text-[10px] text-muted font-bold uppercase tracking-wider">Episodes</div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Weekly Releases -->
-<div id="weekly-releases" class="mb-12" {% if oob %}hx-swap-oob="true"{% endif %}>
-  <div class="flex items-center gap-2 mb-4">
-    <i data-lucide="calendar" class="w-4 h-4 text-accent"></i>
-    <h2 class="text-sm font-semibold text-muted uppercase tracking-wider">Weekly Releases</h2>
+<!-- Continue Watching (Hero + Grid) -->
+<div id="continue-watching" class="mb-16" {% if oob %}hx-swap-oob="true"{% endif %}>
+  <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center gap-2">
+      <div class="w-1.5 h-6 bg-accent rounded-full"></div>
+      <h2 class="text-sm font-bold text-white uppercase tracking-[0.2em]">Continue Watching</h2>
+    </div>
+    <a href="{% url 'watching_list' %}" class="flex items-center gap-2 text-xs font-bold text-accent hover:text-accent-hover transition-colors group">
+      View All
+      <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+    </a>
+  </div>
+
+  {% if continue_watching %}
+    <div class="space-y-8">
+      <!-- Hero Section (First Item) -->
+      {% with first=continue_watching|first %}
+      <div class="relative h-[450px] rounded-[32px] overflow-hidden group premium-shadow">
+        {% if first.anime.banner_image_url %}
+          <img src="{{ first.anime.banner_image_url }}" alt="{{ first.anime.title_english }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000">
+        {% elif first.anime.cover_image_url %}
+          <img src="{{ first.anime.cover_image_url }}" alt="{{ first.anime.title_english }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000">
+        {% endif %}
+        
+        <div class="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+        
+        <div class="absolute inset-0 p-12 flex flex-col justify-center max-w-2xl">
+          <div class="flex items-center gap-3 mb-6 animate-slide-up" style="animation-delay: 0.1s">
+            <span class="px-3 py-1 rounded-lg bg-accent text-background text-[10px] font-black uppercase tracking-widest">Featured</span>
+            <span class="text-xs font-bold text-white/70">Episode {{ first.progress }} / {{ first.anime.episodes|default:"?" }}</span>
+          </div>
+          
+          <h1 class="text-5xl font-black mb-6 leading-tight animate-slide-up" style="animation-delay: 0.2s">
+            {% firstof first.anime.title_english first.anime.title_romaji first.anime.title_native "Untitled" %}
+          </h1>
+          
+          <div class="flex items-center gap-6 mb-10 animate-slide-up" style="animation-delay: 0.3s">
+            <div class="flex flex-col">
+              <span class="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Progress</span>
+              <div class="w-48 h-2 bg-white/10 rounded-full overflow-hidden">
+                <div class="h-full bg-accent accent-glow" style="width: {% widthratio first.progress first.anime.episodes|default:first.progress 100 %}%"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-4 animate-slide-up" style="animation-delay: 0.4s">
+            <a href="{% url 'anime_resume' first.anime_id %}" class="flex items-center gap-3 bg-accent hover:bg-accent-hover text-background px-8 py-4 rounded-2xl font-black transition-all hover:scale-105 active:scale-95 shadow-2xl">
+              <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+              Resume Watching
+            </a>
+            <form method="post" hx-post="{% url 'anime_progress' first.anime_id %}" hx-swap="none">
+              {% csrf_token %}
+              <input type="hidden" name="progress" value="{{ first.progress|add:1 }}" />
+              <button type="submit" class="w-14 h-14 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all hover:scale-105 active:scale-95">
+                <i data-lucide="plus" class="w-6 h-6"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endwith %}
+
+      <!-- Rest of the Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {% for entry in continue_watching|slice:"1:" %}
+          <div class="card-base group hover:border-accent/30 premium-shadow">
+            <div class="relative h-48 overflow-hidden">
+              {% if entry.anime.banner_image_url %}
+                <img src="{{ entry.anime.banner_image_url }}" alt="{{ entry.anime.title_english }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+              {% elif entry.anime.cover_image_url %}
+                <img src="{{ entry.anime.cover_image_url }}" alt="{{ entry.anime.title_english }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+              {% endif %}
+              <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-60"></div>
+              <div class="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
+                <div class="h-full bg-accent" style="width: {% widthratio entry.progress entry.anime.episodes|default:entry.progress 100 %}%"></div>
+              </div>
+            </div>
+            <div class="p-5">
+              <h3 class="font-bold text-sm mb-4 line-clamp-1 group-hover:text-accent transition-colors">
+                {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
+              </h3>
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] text-muted font-bold uppercase tracking-wider">Ep {{ entry.progress }} / {{ entry.anime.episodes|default:"?" }}</span>
+                <a href="{% url 'anime_resume' entry.anime_id %}" class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent hover:bg-accent hover:text-background transition-all">
+                  <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% else %}
+    <div class="card-base p-16 text-center glass">
+      <div class="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <i data-lucide="play-circle" class="w-10 h-10 text-muted"></i>
+      </div>
+      <p class="text-muted font-medium">No active shows yet. Start watching something!</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Weekly Releases Summary -->
+<div id="weekly-releases" class="mb-16" {% if oob %}hx-swap-oob="true"{% endif %}>
+  <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center gap-2">
+      <div class="w-1.5 h-6 bg-accent rounded-full"></div>
+      <h2 class="text-sm font-bold text-white uppercase tracking-[0.2em]">Weekly Releases</h2>
+    </div>
+    <a href="{% url 'weekly_releases' %}" class="flex items-center gap-2 text-xs font-bold text-accent hover:text-accent-hover transition-colors group">
+      View All
+      <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+    </a>
   </div>
   {% if weekly_releases.items %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {% for release in weekly_releases.items %}
-        <div class="card-base p-3 flex gap-4 hover:bg-white/5 transition-colors cursor-pointer group">
-          <div class="w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for release in weekly_releases.items|slice:":6" %}
+        <div class="card-base p-4 flex gap-5 hover:bg-white/[0.05] transition-all cursor-pointer group hover:scale-[1.02] active:scale-[0.98]">
+          <div class="w-20 h-28 rounded-2xl overflow-hidden flex-shrink-0 bg-white/5 premium-shadow">
             {% if release.cover_image_url %}
-              <img src="{{ release.cover_image_url }}" alt="{{ release.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+              <img src="{{ release.cover_image_url }}" alt="{{ release.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
             {% else %}
               <div class="w-full h-full flex items-center justify-center">
-                <i data-lucide="image" class="w-6 h-6 text-muted"></i>
+                <i data-lucide="image" class="w-8 h-8 text-muted"></i>
               </div>
             {% endif %}
           </div>
           <div class="flex flex-col justify-center min-w-0">
-            <h3 class="font-bold text-sm truncate mb-1">{{ release.title }}</h3>
-            <div class="flex items-center gap-2 text-xs text-muted">
-              <i data-lucide="play" class="w-3 h-3 fill-current"></i>
-              <span>Ep {{ release.episode|default:"?" }}</span>
-              <span class="w-1 h-1 rounded-full bg-muted"></span>
-              <i data-lucide="clock" class="w-3 h-3"></i>
-              <span>{{ release.airing_label }}</span>
+            <h3 class="font-bold text-base truncate mb-2 group-hover:text-accent transition-colors">{{ release.title }}</h3>
+            <div class="flex items-center gap-3">
+              <span class="text-accent bg-accent/10 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-accent/20">Ep {{ release.episode|default:"?" }}</span>
+              <div class="flex items-center gap-1.5 text-xs text-muted font-bold">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                <span>{{ release.airing_label }}</span>
+              </div>
             </div>
           </div>
         </div>
       {% endfor %}
     </div>
   {% else %}
-    <div class="card-base p-8 text-center text-muted text-sm">
+    <div class="card-base p-12 text-center text-muted text-sm glass">
       {{ weekly_releases.message }}
     </div>
   {% endif %}
 </div>
 
-<!-- Continue Watching -->
-<div id="continue-watching" class="mb-12" {% if oob %}hx-swap-oob="true"{% endif %}>
-  <div class="flex items-center gap-2 mb-4">
-    <i data-lucide="play-circle" class="w-4 h-4 text-accent"></i>
-    <h2 class="text-sm font-semibold text-muted uppercase tracking-wider">Continue Watching</h2>
-  </div>
-  {% if continue_watching %}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {% for entry in continue_watching %}
-        <div class="card-base flex flex-col sm:flex-row h-auto sm:h-64 group">
-          <div class="relative w-full sm:w-1/2 h-48 sm:h-full overflow-hidden bg-white/5">
-            {% if entry.anime.banner_image_url %}
-              <img src="{{ entry.anime.banner_image_url }}" alt="{{ entry.anime.title_english }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-            {% elif entry.anime.cover_image_url %}
-              <img src="{{ entry.anime.cover_image_url }}" alt="{{ entry.anime.title_english }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-            {% else %}
-              <div class="w-full h-full flex items-center justify-center">
-                <i data-lucide="image" class="w-12 h-12 text-muted"></i>
-              </div>
-            {% endif %}
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
-              <div class="h-full bg-accent" style="width: {% widthratio entry.progress entry.anime.episodes|default:entry.progress 100 %}%"></div>
-            </div>
-          </div>
-          <div class="p-6 flex-1 flex flex-col justify-between min-w-0">
-            <div>
-              <h3 class="text-lg font-bold mb-2 line-clamp-2">
-                {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
-              </h3>
-              <p class="text-sm text-muted mb-4">Progress: {{ entry.progress }} / {{ entry.anime.episodes|default:"?" }}</p>
-            </div>
-            <div class="flex items-center gap-3">
-              <a href="{% url 'anime_resume' entry.anime_id %}" class="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-lg text-sm font-bold transition-colors">
-                <i data-lucide="play" class="w-4 h-4 fill-current"></i>
-                Resume
-              </a>
-              <div class="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-border">
-                <span class="px-3 text-sm font-bold">{{ entry.progress }}</span>
-                <form method="post" hx-post="{% url 'anime_progress' entry.anime_id %}" hx-swap="none">
-                  {% csrf_token %}
-                  <input type="hidden" name="progress" value="{{ entry.progress|add:1 }}" />
-                  <button type="submit" class="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-md transition-colors">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
+<!-- Recommendations Summary -->
+<div id="recommendations" class="mb-16" {% if oob %}hx-swap-oob="true"{% endif %}>
+  <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center gap-2">
+      <div class="w-1.5 h-6 bg-accent rounded-full"></div>
+      <h2 class="text-sm font-bold text-white uppercase tracking-[0.2em]">Recommendations</h2>
     </div>
-  {% else %}
-    <div class="card-base p-12 text-center">
-      <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-        <i data-lucide="clapperboard" class="w-8 h-8 text-muted"></i>
-      </div>
-      <p class="text-muted">No active shows yet. Start watching something!</p>
-    </div>
-  {% endif %}
-</div>
-
-<!-- Recommendations -->
-<div id="recommendations" class="mb-12" {% if oob %}hx-swap-oob="true"{% endif %}>
-  <div class="flex items-center gap-2 mb-4">
-    <i data-lucide="sparkles" class="w-4 h-4 text-accent"></i>
-    <h2 class="text-sm font-semibold text-muted uppercase tracking-wider">Recommendations</h2>
+    <a href="{% url 'recommendations' %}" class="flex items-center gap-2 text-xs font-bold text-accent hover:text-accent-hover transition-colors group">
+      View All
+      <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+    </a>
   </div>
   {% if recommendations.items %}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-      {% for recommendation in recommendations.items %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      {% for recommendation in recommendations.items|slice:":6" %}
         <div class="group cursor-pointer">
-          <div class="aspect-[2/3] rounded-xl overflow-hidden bg-white/5 mb-2 relative">
+          <div class="aspect-[2/3] rounded-[24px] overflow-hidden bg-white/5 mb-4 relative premium-shadow">
             {% if recommendation.cover_image_url %}
-              <img src="{{ recommendation.cover_image_url }}" alt="{{ recommendation.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+              <img src="{{ recommendation.cover_image_url }}" alt="{{ recommendation.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
             {% else %}
               <div class="w-full h-full flex items-center justify-center">
-                <i data-lucide="image" class="w-8 h-8 text-muted"></i>
+                <i data-lucide="image" class="w-10 h-10 text-muted"></i>
               </div>
             {% endif %}
-            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <div class="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-background">
-                <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+              <div class="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center text-background shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
+                <i data-lucide="play" class="w-7 h-7 fill-current"></i>
               </div>
             </div>
           </div>
-          <h3 class="font-bold text-xs line-clamp-2 group-hover:text-accent transition-colors">{{ recommendation.title }}</h3>
-          <p class="text-[10px] text-muted mt-0.5">
-            {% if recommendation.episodes %}{{ recommendation.episodes }} episodes{% else %}Movie{% endif %}
-          </p>
+          <h3 class="font-bold text-sm line-clamp-2 group-hover:text-accent transition-colors leading-tight px-1">{{ recommendation.title }}</h3>
         </div>
       {% endfor %}
     </div>
   {% else %}
-    <div class="card-base p-8 text-center text-muted text-sm">
+    <div class="card-base p-12 text-center text-muted text-sm glass">
       {{ recommendations.message }}
-    </div>
-  {% endif %}
-</div>
-
-<!-- Watching -->
-<div id="watching-list" class="mb-12" {% if oob %}hx-swap-oob="true"{% endif %}>
-  <div class="flex items-center gap-2 mb-4">
-    <i data-lucide="clock" class="w-4 h-4 text-accent"></i>
-    <h2 class="text-sm font-semibold text-muted uppercase tracking-wider">Watching</h2>
-  </div>
-  {% if watching_entries %}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-      {% for entry in watching_entries %}
-        <div class="group cursor-pointer">
-          <div class="aspect-[2/3] rounded-xl overflow-hidden bg-white/5 mb-2 relative">
-            {% if entry.anime.cover_image_url %}
-              <img src="{{ entry.anime.cover_image_url }}" alt="{{ entry.anime.title_english }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-            {% else %}
-              <div class="w-full h-full flex items-center justify-center">
-                <i data-lucide="image" class="w-8 h-8 text-muted"></i>
-              </div>
-            {% endif %}
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
-              <div class="h-full bg-accent" style="width: {% widthratio entry.progress entry.anime.episodes|default:entry.progress 100 %}%"></div>
-            </div>
-            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <a href="{% url 'anime_resume' entry.anime_id %}" class="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-background">
-                <i data-lucide="play" class="w-5 h-5 fill-current"></i>
-              </a>
-            </div>
-          </div>
-          <h3 class="font-bold text-xs line-clamp-2 group-hover:text-accent transition-colors">
-            {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
-          </h3>
-          <p class="text-[10px] text-muted mt-0.5">{{ entry.progress }} / {{ entry.anime.episodes|default:"?" }} episodes</p>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="card-base p-8 text-center text-muted text-sm">
-      Nothing in your watching list yet.
-    </div>
-  {% endif %}
-</div>
-
-<!-- Planning -->
-<div id="planning-list" class="mb-12" {% if oob %}hx-swap-oob="true"{% endif %}>
-  <div class="flex items-center gap-2 mb-4">
-    <i data-lucide="bookmark" class="w-4 h-4 text-accent"></i>
-    <h2 class="text-sm font-semibold text-muted uppercase tracking-wider">Planning</h2>
-  </div>
-  {% if planning_entries %}
-    <div class="card-base p-8 text-center text-muted text-sm">
-      Your planning list is empty.
-    </div>
-  {% else %}
-    <div class="card-base p-8 text-center text-muted text-sm">
-      Your planning list is empty.
-    </div>
-  {% endif %}
-</div>
-
-<!-- Completed -->
-<div id="completed-list" class="mb-12" {% if oob %}hx-swap-oob="true"{% endif %}>
-  <div class="flex items-center gap-2 mb-4">
-    <i data-lucide="check-circle" class="w-4 h-4 text-accent"></i>
-    <h2 class="text-sm font-semibold text-muted uppercase tracking-wider">Completed</h2>
-  </div>
-  {% if completed_entries %}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-      {% for entry in completed_entries %}
-        <div class="group relative">
-          <div class="aspect-[2/3] rounded-xl overflow-hidden bg-white/5 mb-2 relative">
-            {% if entry.anime.cover_image_url %}
-              <img src="{{ entry.anime.cover_image_url }}" alt="{{ entry.anime.title_english }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-            {% else %}
-              <div class="w-full h-full flex items-center justify-center">
-                <i data-lucide="image" class="w-8 h-8 text-muted"></i>
-              </div>
-            {% endif %}
-            <div class="absolute top-2 right-2 bg-accent text-background text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-              <i data-lucide="check" class="w-3 h-3"></i>
-              Done
-            </div>
-          </div>
-          <h3 class="font-bold text-xs line-clamp-2 group-hover:text-accent transition-colors">
-            {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
-          </h3>
-          <p class="text-[10px] text-muted mt-0.5">Finished: {{ entry.progress }} / {{ entry.anime.episodes|default:"?" }}</p>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="card-base p-8 text-center text-muted text-sm">
-      No completed titles yet.
     </div>
   {% endif %}
 </div>

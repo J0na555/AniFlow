@@ -23,5 +23,9 @@ urlpatterns = [
         name="ignore_watching_limit",
     ),
     path("search/", views.search_anime, name="anime_search"),
+    path("watching/", views.watching_list, name="watching_list"),
+    path("completed/", views.completed_list, name="completed_list"),
+    path("releases/", views.weekly_releases_page, name="weekly_releases"),
+    path("recommendations/", views.recommendations_page, name="recommendations"),
     path("health/", views.health_check, name="health_check"),
 ]

@@ -31,9 +31,6 @@ def _build_dashboard_context(
 ) -> dict:
     entries = UserAnime.objects.filter(user=user).select_related("anime")
     watching = entries.filter(status="watching").order_by("-updated_at")
-    planning = entries.filter(status="planning").order_by(
-        "anime__title_english", "anime__title_romaji"
-    )
     completed = entries.filter(status="completed").order_by("-updated_at")
     watching_entries = list(watching)
     productivity_stats = get_productivity_stats(user, entries=entries)
@@ -44,7 +41,6 @@ def _build_dashboard_context(
     context = {
         "continue_watching": list(watching[:5]),
         "watching_entries": watching_entries,
-        "planning_entries": list(planning),
         "completed_entries": list(completed),
         "productivity_stats": productivity_stats,
         "watching_limit": watching_limit,
@@ -151,7 +147,17 @@ def update_progress(request, anime_id: int):
 
     if request.headers.get("HX-Request") == "true":
         context = _build_dashboard_context(request.user, oob=True)
-        return render(request, "anime/partials/dashboard_sections.html", context)
+        response = render(request, "anime/partials/dashboard_sections.html", context)
+        # Add a success toast
+        toast_html = render(request, "partials/toast.html", {
+            "id": "sync-success",
+            "message": "AniList synced successfully!",
+            "type": "success"
+        }).content.decode("utf-8")
+        
+        # Append toast OOB
+        response.content += f'<div id="toast-container" hx-swap-oob="beforeend">{toast_html}</div>'.encode("utf-8")
+        return response
 
     return redirect("dashboard")
 
@@ -162,7 +168,17 @@ def sync_list(request):
     sync_user_list(request.user)
     if request.headers.get("HX-Request") == "true":
         context = _build_dashboard_context(request.user, oob=True)
-        return render(request, "anime/partials/dashboard_sections.html", context)
+        response = render(request, "anime/partials/dashboard_sections.html", context)
+        # Add a success toast
+        toast_html = render(request, "partials/toast.html", {
+            "id": "sync-success",
+            "message": "AniList synced successfully!",
+            "type": "success"
+        }).content.decode("utf-8")
+        
+        # Append toast OOB
+        response.content += f'<div id="toast-container" hx-swap-oob="beforeend">{toast_html}</div>'.encode("utf-8")
+        return response
     return redirect("dashboard")
 
 
@@ -172,7 +188,17 @@ def ignore_watching_limit(request):
     enable_watching_limit_override(request.user)
     if request.headers.get("HX-Request") == "true":
         context = _build_dashboard_context(request.user, oob=True)
-        return render(request, "anime/partials/dashboard_sections.html", context)
+        response = render(request, "anime/partials/dashboard_sections.html", context)
+        # Add a success toast
+        toast_html = render(request, "partials/toast.html", {
+            "id": "sync-success",
+            "message": "AniList synced successfully!",
+            "type": "success"
+        }).content.decode("utf-8")
+        
+        # Append toast OOB
+        response.content += f'<div id="toast-container" hx-swap-oob="beforeend">{toast_html}</div>'.encode("utf-8")
+        return response
     return redirect("dashboard")
 
 
@@ -250,6 +276,30 @@ def search_anime(request):
     return render(request, "anime/search.html", context)
 
 
+@login_required
+def watching_list(request):
+    entries = UserAnime.objects.filter(user=request.user, status="watching").select_related("anime").order_by("-updated_at")
+    return render(request, "anime/watching.html", {"watching_entries": entries})
+
+
+@login_required
+def completed_list(request):
+    entries = UserAnime.objects.filter(user=request.user, status="completed").select_related("anime").order_by("-updated_at")
+    return render(request, "anime/completed.html", {"completed_entries": entries})
+
+
+@login_required
+def weekly_releases_page(request):
+    releases = get_weekly_releases(request.user, limit=50)
+    return render(request, "anime/weekly_releases.html", {"weekly_releases": releases})
+
+
+@login_required
+def recommendations_page(request):
+    recommendations = get_recommendations(request.user, limit=50)
+    return render(request, "anime/recommendations.html", {"recommendations": recommendations})
+
+
 def health_check(request):
     """
     Health check endpoint for monitoring and cronjobs.
@@ -260,7 +310,6 @@ def health_check(request):
         "database": "connected",
     }
     try:
-        # Simple database check
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
     except Exception as e:

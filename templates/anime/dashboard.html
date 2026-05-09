@@ -3,15 +3,18 @@
 {% block title %}Aniflow Dashboard{% endblock %}
 
 {% block top_bar_search %}
-  <form method="get" action="{% url 'anime_search' %}" class="relative">
-    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted"></i>
+  <form method="get" action="{% url 'anime_search' %}" class="relative group max-w-md">
+    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-accent transition-colors"></i>
     <input 
       type="text" 
       name="q" 
-      placeholder="Search anime..." 
-      class="w-full bg-white/5 border border-border rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-accent transition-colors"
+      placeholder="Search anime, movies, series..." 
+      class="w-full bg-white/[0.03] border border-border rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] transition-all duration-300"
     />
-    <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] bg-white/10 px-1.5 py-0.5 rounded border border-white/10 text-muted">/</div>
+    <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1">
+      <kbd class="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-bold bg-white/5 border border-white/10 rounded-lg text-muted">⌘</kbd>
+      <kbd class="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-bold bg-white/5 border border-white/10 rounded-lg text-muted">K</kbd>
+    </div>
   </form>
 {% endblock %}
 
@@ -23,9 +26,9 @@
     class="flex items-center"
   >
     {% csrf_token %}
-    <button type="submit" class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-border px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+    <button type="submit" class="flex items-center gap-2.5 bg-white/[0.03] hover:bg-white/[0.08] border border-border px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
       <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-      Sync AniList
+      <span>Sync AniList</span>
     </button>
   </form>
 {% endblock %}
