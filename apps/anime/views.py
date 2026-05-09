@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.db import connection
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
@@ -247,3 +248,24 @@ def search_anime(request):
         "unauthenticated": not request.user.is_authenticated,
     }
     return render(request, "anime/search.html", context)
+
+
+def health_check(request):
+    """
+    Health check endpoint for monitoring and cronjobs.
+    Verifies that the application and database are responsive.
+    """
+    health_data = {
+        "status": "healthy",
+        "database": "connected",
+    }
+    try:
+        # Simple database check
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+    except Exception as e:
+        health_data["status"] = "unhealthy"
+        health_data["database"] = f"error: {str(e)}"
+        return JsonResponse(health_data, status=503)
+
+    return JsonResponse(health_data)
