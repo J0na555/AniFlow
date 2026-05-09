@@ -2,33 +2,49 @@
 
 {% block title %}Aniflow Dashboard{% endblock %}
 
+{% block top_bar_search %}
+  <form method="get" action="{% url 'anime_search' %}" class="relative">
+    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted"></i>
+    <input 
+      type="text" 
+      name="q" 
+      placeholder="Search anime..." 
+      class="w-full bg-white/5 border border-border rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-accent transition-colors"
+    />
+    <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] bg-white/10 px-1.5 py-0.5 rounded border border-white/10 text-muted">/</div>
+  </form>
+{% endblock %}
+
+{% block top_bar_actions %}
+  <form
+    method="post"
+    hx-post="{% url 'sync_list' %}"
+    hx-swap="none"
+    class="flex items-center"
+  >
+    {% csrf_token %}
+    <button type="submit" class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-border px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      Sync AniList
+    </button>
+  </form>
+{% endblock %}
+
 {% block content %}
   {% if unauthenticated %}
-    <div class="section">
-      <h2>Connect AniList</h2>
-      <p class="meta">Sign in to sync your list and start tracking progress.</p>
-      <a class="actions" href="{% url 'anilist_login' %}">Connect AniList</a>
+    <div class="flex flex-col items-center justify-center h-full text-center">
+      <div class="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mb-6">
+        <i data-lucide="link" class="w-10 h-10 text-accent"></i>
+      </div>
+      <h2 class="text-2xl font-bold mb-2">Connect AniList</h2>
+      <p class="text-muted mb-8 max-w-md">Sign in to sync your list, track progress, and get personalized recommendations.</p>
+      <a href="{% url 'anilist_login' %}" class="bg-accent hover:bg-accent-hover text-background font-bold px-8 py-3 rounded-xl transition-colors">
+        Connect AniList
+      </a>
     </div>
   {% else %}
-    <div class="section">
-      <form method="get" action="{% url 'anime_search' %}">
-        <label>
-          <span class="meta">Search anime or jump to a streaming site</span>
-          <div class="actions">
-            <input type="text" name="q" placeholder="Search anime titles" />
-            <button type="submit">Search</button>
-          </div>
-        </label>
-      </form>
-      <form
-        method="post"
-        hx-post="{% url 'sync_list' %}"
-        hx-swap="none"
-        class="actions"
-      >
-        {% csrf_token %}
-        <button type="submit" class="secondary">Sync AniList</button>
-      </form>
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold">Dashboard</h1>
     </div>
     {% include "anime/partials/dashboard_sections.html" %}
   {% endif %}

@@ -1,82 +1,150 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{% block title %}Aniflow{% endblock %}</title>
+    <title>{% block title %}AniFlow{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <style>
-      body {
-        font-family: system-ui, sans-serif;
-        margin: 0;
-        background: #0f172a;
-        color: #e2e8f0;
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              background: '#0a0a0a',
+              sidebar: '#0d0d0d',
+              card: '#141414',
+              accent: '#00d1b2',
+              'accent-hover': '#00b89c',
+              border: '#1f1f1f',
+              muted: '#888888',
+            }
+          }
+        }
       }
-      a {
-        color: #38bdf8;
+    </script>
+    <style type="text/tailwindcss">
+      @layer base {
+        html {
+          scroll-behavior: smooth;
+        }
+        body {
+          @apply bg-background text-gray-200 antialiased;
+        }
       }
-      header {
-        padding: 24px 32px;
-        border-bottom: 1px solid #1e293b;
-      }
-      main {
-        padding: 24px 32px 48px;
-      }
-      .section {
-        margin-bottom: 32px;
-      }
-      .card {
-        background: #111827;
-        border: 1px solid #1f2937;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 12px;
-      }
-      .list {
-        display: grid;
-        gap: 12px;
-      }
-      .meta {
-        color: #94a3b8;
-        font-size: 0.9rem;
-      }
-      .actions {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-top: 8px;
-      }
-      input[type="number"] {
-        width: 72px;
-        padding: 6px;
-        background: #0b1120;
-        border: 1px solid #334155;
-        color: #e2e8f0;
-        border-radius: 6px;
-      }
-      button {
-        background: #2563eb;
-        color: #fff;
-        border: none;
-        padding: 6px 10px;
-        border-radius: 6px;
-        cursor: pointer;
-      }
-      button.secondary {
-        background: #475569;
-      }
-      .empty {
-        color: #94a3b8;
-        padding: 12px 0;
+      @layer components {
+        .nav-item {
+          @apply flex items-center gap-3 px-4 py-2 rounded-lg transition-colors hover:bg-white/5;
+        }
+        .nav-item.active {
+          @apply bg-white/5 text-accent;
+        }
+        .sidebar-section-title {
+          @apply px-4 text-xs font-semibold text-muted uppercase tracking-wider mb-2 mt-6;
+        }
+        .card-base {
+          @apply bg-card border border-border rounded-xl overflow-hidden;
+        }
       }
     </style>
   </head>
-  <body>
-    <header>
-      <h1>Aniflow</h1>
-    </header>
-    <main>
-      {% block content %}{% endblock %}
+  <body class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-sidebar border-r border-border flex flex-col flex-shrink-0">
+      <div class="p-6 flex items-center gap-3">
+        <div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+          <i data-lucide="play" class="w-5 h-5 text-background fill-current"></i>
+        </div>
+        <span class="text-xl font-bold tracking-tight">AniFlow</span>
+      </div>
+
+      <nav class="flex-1 px-3 overflow-y-auto">
+        <div class="sidebar-section-title">Library</div>
+        <a href="{% url 'dashboard' %}" class="nav-item active">
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="{% url 'dashboard' %}#continue-watching" class="nav-item">
+          <i data-lucide="play-circle" class="w-5 h-5"></i>
+          <span>Continue Watching</span>
+        </a>
+        <a href="{% url 'dashboard' %}#weekly-releases" class="nav-item">
+          <i data-lucide="calendar" class="w-5 h-5"></i>
+          <span>Weekly Releases</span>
+        </a>
+        <a href="{% url 'dashboard' %}#watching-list" class="nav-item">
+          <i data-lucide="clock" class="w-5 h-5"></i>
+          <span>Watching</span>
+        </a>
+        <a href="{% url 'dashboard' %}#planning-list" class="nav-item">
+          <i data-lucide="bookmark" class="w-5 h-5"></i>
+          <span>Planning</span>
+        </a>
+        <a href="{% url 'dashboard' %}#completed-list" class="nav-item">
+          <i data-lucide="check-circle" class="w-5 h-5"></i>
+          <span>Completed</span>
+        </a>
+        <a href="{% url 'dashboard' %}#recommendations" class="nav-item">
+          <i data-lucide="sparkles" class="w-5 h-5"></i>
+          <span>Recommendations</span>
+        </a>
+      </nav>
+
+      <div class="p-4 border-t border-border space-y-2">
+        <a href="#" class="nav-item">
+          <i data-lucide="settings" class="w-5 h-5"></i>
+          <span>Settings</span>
+        </a>
+        <form method="post" action="{% url 'logout' %}" class="w-full">
+          {% csrf_token %}
+          <button type="submit" class="nav-item w-full text-left">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+            <span>Disconnect AniList</span>
+          </button>
+        </form>
+        
+        <div class="pt-4 flex items-center gap-3 px-2">
+          <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold">
+            {% if user.is_authenticated %}
+              {{ user.username|slice:":2"|upper }}
+            {% else %}
+              AN
+            {% endif %}
+          </div>
+          <div class="flex flex-col">
+            <span class="text-sm font-medium">{% if user.is_authenticated %}{{ user.username }}{% else %}AnimeWatcher{% endif %}</span>
+            <span class="text-xs text-muted">AniList Connected</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <!-- Top Bar -->
+      <header class="h-16 border-b border-border flex items-center justify-between px-8 bg-background/50 backdrop-blur-sm z-10">
+        <div class="flex-1 max-w-xl">
+          {% block top_bar_search %}{% endblock %}
+        </div>
+        <div class="flex items-center gap-4">
+          {% block top_bar_actions %}{% endblock %}
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="flex-1 overflow-y-auto p-8">
+        {% block content %}{% endblock %}
+      </div>
     </main>
+
+    <script>
+      lucide.createIcons();
+      // Re-initialize icons after HTMX swaps
+      document.body.addEventListener('htmx:afterSwap', function() {
+        lucide.createIcons();
+      });
+    </script>
   </body>
 </html>

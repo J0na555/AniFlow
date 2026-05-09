@@ -5,7 +5,7 @@ from urllib.parse import urlencode, urlparse
 
 import httpx
 from django.conf import settings
-from django.contrib.auth import get_user_model, login
+from django.contrib.auth import get_user_model, login, logout
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
@@ -196,9 +196,6 @@ def anilist_callback(request: HttpRequest) -> HttpResponse:
     target = _safe_post_login_redirect(stored_target)
     if target:
         return redirect(target)
-    frontend_url = getattr(settings, "FRONTEND_URL", "")
-    if frontend_url:
-        return redirect(frontend_url)
     return redirect("dashboard")
 
 
@@ -206,3 +203,8 @@ def anilist_complete(request: HttpRequest) -> HttpResponse:
     return HttpResponse(
         "AniList connected and list synced. You can close this tab."
     )
+
+
+def logout_view(request: HttpRequest) -> HttpResponse:
+    logout(request)
+    return redirect("dashboard")
