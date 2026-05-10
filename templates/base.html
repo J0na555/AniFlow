@@ -1,9 +1,14 @@
+{% load static %}
 <!doctype html>
 <html lang="en" class="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}AniFlow{% endblock %}</title>
+    <meta name="theme-color" content="#ea4497" />
+    <link rel="icon" type="image/x-icon" href="{% static 'anime/branding/favicon.ico' %}?v=3" />
+    <link rel="shortcut icon" href="{% static 'anime/branding/favicon.ico' %}?v=3" />
+    <link rel="apple-touch-icon" href="{% static 'anime/branding/logo_1.png' %}?v=3" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -22,8 +27,9 @@
               background: '#050505',
               sidebar: '#080808',
               card: '#0f0f0f',
-              accent: '#00d1b2',
-              'accent-hover': '#00b89c',
+              accent: '#ea4497',
+              'accent-hover': '#dd1864',
+              'accent-active': '#9d143f',
               border: '#1a1a1a',
               muted: '#71717a',
             },
@@ -72,7 +78,7 @@
       }
       @layer components {
         .nav-item {
-          @apply flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 hover:bg-white/5 text-muted hover:text-white;
+          @apply flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-muted hover:bg-accent/10 hover:text-accent active:bg-accent/15 active:text-accent;
         }
         .nav-item.active {
           @apply bg-accent/10 text-accent font-semibold;
@@ -90,7 +96,7 @@
           box-shadow: 0 0 40px -10px rgba(0, 0, 0, 0.5);
         }
         .accent-glow {
-          box-shadow: 0 0 20px -5px rgba(0, 209, 178, 0.3);
+          box-shadow: 0 0 24px -6px rgba(234, 68, 151, 0.45);
         }
         .htmx-indicator {
           display: none;
@@ -107,12 +113,9 @@
   <body class="flex h-screen overflow-hidden">
     <!-- Sidebar -->
     <aside class="w-72 bg-sidebar border-r border-border flex flex-col flex-shrink-0 z-20">
-      <div class="p-8 flex items-center gap-3">
-        <div class="w-9 h-9 bg-accent rounded-xl flex items-center justify-center accent-glow">
-          <i data-lucide="play" class="w-5 h-5 text-background fill-current"></i>
-        </div>
-        <span class="text-2xl font-black tracking-tighter">AniFlow</span>
-      </div>
+      <a href="{% url 'dashboard' %}" class="p-6 flex items-center justify-center border-b border-border/70">
+        <img src="{% static 'anime/branding/logo_1.png' %}" alt="AniFlow" class="h-24 w-auto rounded-2xl accent-glow object-contain" />
+      </a>
 
       <nav class="flex-1 px-4 overflow-y-auto space-y-1">
         <div class="sidebar-section-title">Library</div>
