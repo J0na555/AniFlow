@@ -28,6 +28,14 @@ def seed_additional_streaming_sources(apps, schema_editor) -> None:
             "priority": 100,
             "is_active": True,
         },
+        {
+            "name": "AniWaves",
+            "base_url": "https://aniwaves.ru",
+            "search_url_template": "https://aniwaves.ru/search?q={query}",
+            "episode_pattern": "watch/{slug}/ep-{episode}",
+            "priority": 10,
+            "is_active": True,
+        },
     ]
     for source in sources:
         StreamingSource.objects.update_or_create(name=source["name"], defaults=source)
@@ -35,7 +43,7 @@ def seed_additional_streaming_sources(apps, schema_editor) -> None:
 
 def unseed_additional_streaming_sources(apps, schema_editor) -> None:
     StreamingSource = apps.get_model("streaming", "StreamingSource")
-    StreamingSource.objects.filter(name__in=["Gogoanime", "AniTaku"]).delete()
+    StreamingSource.objects.filter(name__in=["Gogoanime", "AniTaku", "AniWaves"]).delete()
 
 
 class Migration(migrations.Migration):

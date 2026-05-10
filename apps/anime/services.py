@@ -8,11 +8,12 @@ from .models import Anime, UserAnime
 
 
 def upsert_from_tracker_payload(payload: dict[str, Any]) -> Anime:
-    tracker_type = payload["tracker_type"]
-    tracker_id = payload["tracker_id"]
+    tracker_type = payload.get("tracker_type") or "anilist"
+    tracker_id = str(payload["tracker_id"])
+    preferred_title = payload.get("title", "")
     defaults = {
         "title_romaji": payload.get("title_romaji", ""),
-        "title_english": payload.get("title_english", ""),
+        "title_english": payload.get("title_english", "") or preferred_title,
         "title_native": payload.get("title_native", ""),
         "season": payload.get("season", ""),
         "season_year": payload.get("season_year"),

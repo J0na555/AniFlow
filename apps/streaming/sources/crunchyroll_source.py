@@ -6,6 +6,8 @@ from .base_source import StreamingSourceAdapter
 
 
 class CrunchyrollSourceAdapter(StreamingSourceAdapter):
+    source_names = ("crunchyroll", "crunchy roll")
+
     def search(self, query: str) -> list[StreamingCandidate]:
         # Search-only fallback until a real Crunchyroll parser is added.
         return []

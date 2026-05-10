@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import ClassVar
 from urllib.parse import quote
 
 from apps.streaming.models import StreamingSource
@@ -8,6 +9,8 @@ from apps.streaming.types import StreamingCandidate
 
 
 class StreamingSourceAdapter(ABC):
+    source_names: ClassVar[tuple[str, ...]] = ()
+
     def __init__(self, source: StreamingSource) -> None:
         self.source = source
 

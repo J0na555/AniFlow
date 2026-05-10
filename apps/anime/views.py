@@ -17,6 +17,7 @@ from apps.recommendations.services import get_recommendations
 from apps.releases.services import get_weekly_releases
 from apps.streaming.models import AnimeStreamingMapping
 from apps.streaming.models import StreamingSource
+from apps.streaming.router import ordered_sources_for_user
 from apps.streaming.router import resolve_streaming_route
 from apps.streaming.sources import get_adapter_for_source
 from apps.tracker.services import update_progress as tracker_update_progress
@@ -255,7 +256,11 @@ def search_anime(request):
             ).select_related("anime")
             user_entries = {entry.anime_id: entry for entry in entries}
 
-    sources = list(StreamingSource.objects.filter(is_active=True).order_by("priority"))
+    sources = (
+        ordered_sources_for_user(request.user)
+        if request.user.is_authenticated
+        else list(StreamingSource.objects.filter(is_active=True).order_by("priority", "name"))
+    )
     source_links = [
         {
             "source": source,

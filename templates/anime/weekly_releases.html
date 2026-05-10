@@ -14,7 +14,7 @@
 {% if weekly_releases.items %}
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
     {% for release in weekly_releases.items %}
-      <div class="card-base p-5 flex gap-6 hover:bg-white/[0.05] transition-all cursor-pointer group hover:border-accent/30 premium-shadow animate-slide-up" style="animation-delay: {{ forloop.counter0|multiply:0.03 }}s">
+      <a href="{% url 'anime_play' release.anime_id %}" target="_blank" rel="noopener noreferrer" class="card-base p-5 flex gap-6 hover:bg-white/[0.05] transition-all cursor-pointer group hover:border-accent/30 premium-shadow animate-slide-up" style="animation-delay: {{ forloop.counter0|multiply:0.03 }}s">
         <div class="w-24 h-32 rounded-2xl overflow-hidden flex-shrink-0 bg-white/5 shadow-2xl">
           {% if release.cover_image_url %}
             <img src="{{ release.cover_image_url }}" alt="{{ release.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -37,7 +37,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </a>
     {% endfor %}
   </div>
 {% else %}

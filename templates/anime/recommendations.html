@@ -14,7 +14,7 @@
 {% if recommendations.items %}
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
     {% for recommendation in recommendations.items %}
-      <div class="group cursor-pointer animate-slide-up" style="animation-delay: {{ forloop.counter0|add:1|multiply:0.05 }}s">
+      <a href="{% url 'anime_play' recommendation.anime_id %}" target="_blank" rel="noopener noreferrer" class="group block cursor-pointer animate-slide-up" style="animation-delay: {{ forloop.counter0|add:1|multiply:0.05 }}s">
         <div class="aspect-[2/3] rounded-[32px] overflow-hidden bg-white/5 mb-4 relative premium-shadow group-hover:scale-[1.02] transition-all duration-500">
           {% if recommendation.cover_image_url %}
             <img src="{{ recommendation.cover_image_url }}" alt="{{ recommendation.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
@@ -33,7 +33,7 @@
         <p class="text-xs text-muted mt-2 font-bold uppercase tracking-widest px-2">
           {% if recommendation.episodes %}{{ recommendation.episodes }} episodes{% else %}Movie{% endif %}
         </p>
-      </div>
+      </a>
     {% endfor %}
   </div>
 {% else %}

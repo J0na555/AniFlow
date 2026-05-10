@@ -82,14 +82,14 @@
                           Resume
                         </a>
                       {% else %}
-                        <a href="{% url 'anime_play' anime.id %}" class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-white/10">
+                        <a href="{% url 'anime_play' anime.id %}" target="_blank" rel="noopener noreferrer" class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-white/10">
                           <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
                           Play
                         </a>
                         <span class="text-[10px] text-accent font-black uppercase tracking-widest">Completed</span>
                       {% endif %}
                     {% else %}
-                      <a href="{% url 'anime_play' anime.id %}" class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-white/10">
+                      <a href="{% url 'anime_play' anime.id %}" target="_blank" rel="noopener noreferrer" class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-white/10">
                         <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
                         Play
                       </a>

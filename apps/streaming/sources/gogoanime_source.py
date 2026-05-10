@@ -12,6 +12,13 @@ from .base_source import StreamingSourceAdapter
 
 
 class GogoanimeSourceAdapter(StreamingSourceAdapter):
+    source_names = (
+        "gogoanime",
+        "gogo anime",
+        "anitaku",
+        "ani taku",
+    )
+
     _SEARCH_TIMEOUT_SECONDS = 10.0
     _USER_AGENT = (
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "

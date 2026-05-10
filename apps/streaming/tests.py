@@ -1,12 +1,16 @@
 from decimal import Decimal
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
 from apps.anime.models import Anime
 from apps.streaming.matcher import match_anime
 from apps.streaming.models import AnimeStreamingMapping, StreamingSource
 from apps.streaming.services import get_or_create_mapping
+from apps.streaming.sources import get_adapter_for_source
+from apps.streaming.sources.aniwaves_source import AniWavesSourceAdapter
+from apps.streaming.sources.gogoanime_source import GogoanimeSourceAdapter
+from apps.streaming.sources.template_source import TemplateSourceAdapter
 from apps.streaming.types import StreamingCandidate, StreamingMatch
 
 
@@ -105,3 +109,57 @@ class StreamingMappingServiceTests(TestCase):
         self.assertFalse(created)
         self.assertEqual(mapping, existing)
         mock_match_anime.assert_not_called()
+
+
+class StreamingSourceAdapterFactoryTests(SimpleTestCase):
+    def test_get_adapter_for_source_uses_registered_aliases(self) -> None:
+        source = StreamingSource(
+            name="Ani Waves",
+            base_url="https://example.com",
+            search_url_template="https://example.com/search?q={query}",
+            episode_pattern="/watch/{slug}-episode-{episode}",
+        )
+
+        adapter = get_adapter_for_source(source)
+
+        self.assertIsInstance(adapter, AniWavesSourceAdapter)
+
+    def test_get_adapter_for_source_keeps_gogoanime_aliases(self) -> None:
+        source = StreamingSource(
+            name="AniTaku",
+            base_url="https://example.com",
+            search_url_template="https://example.com/search?q={query}",
+            episode_pattern="/watch/{slug}-episode-{episode}",
+        )
+
+        adapter = get_adapter_for_source(source)
+
+        self.assertIsInstance(adapter, GogoanimeSourceAdapter)
+
+    def test_get_adapter_for_source_falls_back_to_template(self) -> None:
+        source = StreamingSource(
+            name="Unknown Source",
+            base_url="https://example.com",
+            search_url_template="https://example.com/search?q={query}",
+            episode_pattern="/watch/{slug}-episode-{episode}",
+        )
+
+        adapter = get_adapter_for_source(source)
+
+        self.assertIsInstance(adapter, TemplateSourceAdapter)
+
+
+class AniWavesSourceAdapterTests(SimpleTestCase):
+    def test_extract_candidates_uses_slug_when_anchor_title_missing(self) -> None:
+        from apps.streaming.sources.aniwaves_source import AniWavesSourceAdapter
+
+        html = '<a href="/watch/kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen-77991"><img src="/x.jpg"></a>'
+
+        candidates = AniWavesSourceAdapter._extract_candidates(html)
+
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(
+            candidates[0].slug,
+            "kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen-77991",
+        )
+        self.assertIn("kaguya sama", candidates[0].title)

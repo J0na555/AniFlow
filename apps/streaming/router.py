@@ -17,7 +17,7 @@ class StreamingRoute:
     search_url: str | None = None
 
 
-def _ordered_sources_for_user(user) -> list[StreamingSource]:
+def ordered_sources_for_user(user) -> list[StreamingSource]:
     sources = list(
         StreamingSource.objects.filter(is_active=True).order_by("priority", "name")
     )
@@ -30,7 +30,7 @@ def _ordered_sources_for_user(user) -> list[StreamingSource]:
 
 def resolve_streaming_route(user, anime: Anime, next_episode: int) -> StreamingRoute:
     search_url: str | None = None
-    for source in _ordered_sources_for_user(user):
+    for source in ordered_sources_for_user(user):
         adapter = get_adapter_for_source(source)
         mapping, _ = get_or_create_mapping(anime, source, adapter)
         if mapping:
