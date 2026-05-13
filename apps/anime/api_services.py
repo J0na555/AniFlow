@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from django.db.models import Q
 
 from apps.anime.models import Anime, UserAnime
@@ -10,9 +12,12 @@ from apps.productivity.services import get_productivity_stats
 from apps.recommendations.services import get_recommendations
 from apps.releases.services import get_weekly_releases
 from apps.streaming.router import resolve_streaming_route
+from apps.tracker.services import save_list_entry as tracker_save_list_entry
 from apps.tracker.services import search_anime as tracker_search_anime
 from apps.tracker.services import sync_user_list
 from apps.tracker.services import update_progress as tracker_update_progress
+
+logger = logging.getLogger(__name__)
 
 
 def _preferred_title(entry: UserAnime) -> str:
@@ -324,7 +329,32 @@ def update_status_payload(user, *, anime_id: int, status: str) -> dict:
     if normalized == "completed" and user_anime.anime.episodes:
         user_anime.progress = user_anime.anime.episodes
     user_anime.save(update_fields=["status", "progress", "updated_at"])
-    return {"item": _serialize_user_entry(user_anime)}
+
+    # Push the change to AniList best-effort. A tracker failure must not roll
+    # back the local write; surface a `tracker_warning` so the SPA can toast
+    # the user and the next sync will reconcile state.
+    tracker_warning: str | None = None
+    if getattr(user, "tracker_access_token", ""):
+        try:
+            tracker_save_list_entry(
+                user,
+                user_anime.anime.tracker_id,
+                status=normalized,
+                progress=user_anime.progress,
+            )
+        except Exception:
+            logger.warning(
+                "Failed to push status update to tracker for user=%s anime=%s",
+                getattr(user, "pk", None),
+                user_anime.anime.tracker_id,
+                exc_info=True,
+            )
+            tracker_warning = "Status saved locally but failed to sync to your tracker."
+
+    payload: dict = {"item": _serialize_user_entry(user_anime)}
+    if tracker_warning:
+        payload["tracker_warning"] = tracker_warning
+    return payload
 
 
 def sync_anilist_payload(user) -> dict:
