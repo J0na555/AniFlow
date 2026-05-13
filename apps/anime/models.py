@@ -33,6 +33,7 @@ class Anime(models.Model):
 
 class UserAnime(models.Model):
     STATUS_CHOICES = [
+        ("planning", "Planning"),
         ("watching", "Watching"),
         ("planning", "Planning"),
         ("completed", "Completed"),

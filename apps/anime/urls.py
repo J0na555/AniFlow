@@ -16,6 +16,11 @@ urlpatterns = [
         views.update_progress,
         name="anime_progress",
     ),
+    path(
+        "anime/<int:anime_id>/status/",
+        views.update_status,
+        name="anime_status",
+    ),
     path("sync/", views.sync_list, name="sync_list"),
     path(
         "settings/watching-limit/ignore/",

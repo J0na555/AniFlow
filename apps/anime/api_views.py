@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_http_methods
 
+from .services import WatchingLimitReached
 from .models import UserAnime
 from .services import WatchingLimitReached
 from .api_services import add_to_library_payload
@@ -249,6 +250,8 @@ def status_api(request, anime_id: int):
         payload = update_status_payload(request.user, anime_id=anime_id, status=status)
     except ValueError:
         return _json_error("Invalid status.", "invalid_status", status=400)
+    except WatchingLimitReached as exc:
+        return _json_error(str(exc), "watching_limit_reached", status=409)
     except UserAnime.DoesNotExist:
         return _json_error("Anime entry not found.", "not_found", status=404)
     return JsonResponse(payload)

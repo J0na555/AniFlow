@@ -42,6 +42,9 @@
           {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
         </h3>
         <p class="text-xs text-muted mt-2 font-bold uppercase tracking-widest px-2">Finished: {{ entry.progress }} episodes</p>
+        <div class="px-2 mt-3">
+          {% include "anime/partials/_library_status_form.html" with anime_id=entry.anime_id current_status=entry.status status_choices=library_status_choices %}
+        </div>
       </div>
     {% endfor %}
   </div>
