@@ -8,6 +8,7 @@ from apps.streaming.matcher import match_anime
 from apps.streaming.models import AnimeStreamingMapping, StreamingSource
 from apps.streaming.services import get_or_create_mapping
 from apps.streaming.sources import get_adapter_for_source
+from apps.streaming.sources.aniwatch_source import AniWatchSourceAdapter
 from apps.streaming.sources.aniwaves_source import AniWavesSourceAdapter
 from apps.streaming.sources.gogoanime_source import GogoanimeSourceAdapter
 from apps.streaming.sources.template_source import TemplateSourceAdapter
@@ -163,3 +164,116 @@ class AniWavesSourceAdapterTests(SimpleTestCase):
             "kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen-77991",
         )
         self.assertIn("kaguya sama", candidates[0].title)
+
+
+class AniWatchSourceAdapterTests(SimpleTestCase):
+    _FEATURED_CARD_HTML = (
+        '<div class="featured-cards-grid">'
+        '<div class="featured-card" data-qtip-id="3294" '
+        'data-qtip-link="https://jp-animenities.com/title/naruto-shippuden/">'
+        '<a href="https://jp-animenities.com/title/naruto-shippuden/" '
+        'title="Naruto Shipp&#363;den" class="featured-card-link">'
+        '<div class="featured-card-image">'
+        '<span class="featured-card-badge badge-year">2007</span>'
+        '<span class="featured-card-badge badge-episodes">Ep 500</span>'
+        '<span class="featured-card-badge badge-quality">HD</span>'
+        "</div>"
+        '<div class="featured-card-body">'
+        '<div class="featured-card-title anime-name" '
+        'data-title-en="Naruto Shipp&#363;den" '
+        'data-title-jp="Naruto Hurricane Chronicles"> Naruto Shipp&#363;den </div>'
+        "</div></a>"
+        '<div class="card-qtip" role="tooltip" aria-hidden="true"></div>'
+        "</div>"
+        '<div class="anime-card" data-qtip-id="546" '
+        'data-qtip-link="https://jp-animenities.com/title/boruto-naruto-the-movie/">'
+        '<a href="https://jp-animenities.com/title/boruto-naruto-the-movie/" '
+        'title="Boruto: Naruto the Movie" class="anime-card-link">'
+        '<div class="anime-card-image">'
+        '<span class="anime-card-badge badge-year">2015</span>'
+        '<span class="anime-card-badge badge-quality">HD</span>'
+        "</div>"
+        '<div class="anime-card-body">'
+        '<h2 class="anime-card-title anime-name" '
+        'data-title-en="Boruto: Naruto the Movie" '
+        'data-title-jp="Gekijouban Naruto (2015)"> Boruto: Naruto the Movie </h2>'
+        "</div></a></div>"
+        "</div>"
+    )
+
+    def test_extract_candidates_returns_main_and_secondary_cards(self) -> None:
+        candidates = AniWatchSourceAdapter._extract_candidates(self._FEATURED_CARD_HTML)
+
+        self.assertEqual(len(candidates), 2)
+
+        first = candidates[0]
+        self.assertEqual(first.slug, "naruto-shippuden")
+        self.assertEqual(first.title, "Naruto Shippūden")
+        self.assertEqual(first.year, 2007)
+        self.assertEqual(first.episodes, 500)
+
+        second = candidates[1]
+        self.assertEqual(second.slug, "boruto-naruto-the-movie")
+        self.assertEqual(second.title, "Boruto: Naruto the Movie")
+        self.assertEqual(second.year, 2015)
+        self.assertIsNone(second.episodes)
+
+    def test_extract_candidates_deduplicates_repeated_slugs(self) -> None:
+        duplicate_html = self._FEATURED_CARD_HTML + self._FEATURED_CARD_HTML
+
+        candidates = AniWatchSourceAdapter._extract_candidates(duplicate_html)
+
+        slugs = [candidate.slug for candidate in candidates]
+        self.assertEqual(slugs, ["naruto-shippuden", "boruto-naruto-the-movie"])
+
+    def test_extract_candidates_returns_empty_for_unrelated_html(self) -> None:
+        self.assertEqual(AniWatchSourceAdapter._extract_candidates("<p>hello</p>"), [])
+
+    def test_normalize_slug_handles_full_url_with_episode(self) -> None:
+        slug = AniWatchSourceAdapter._normalize_slug(
+            "https://jp-animenities.com/title/naruto-shippuden/season/1/"
+        )
+        self.assertEqual(slug, "naruto-shippuden")
+
+    def test_build_episode_url_uses_configured_pattern(self) -> None:
+        source = StreamingSource(
+            name="AniWatch",
+            base_url="https://jp-animenities.com",
+            search_url_template="https://jp-animenities.com/search/?q={query}",
+            episode_pattern="title/{slug}",
+        )
+
+        adapter = AniWatchSourceAdapter(source)
+
+        url = adapter.build_episode_url(
+            "https://jp-animenities.com/title/naruto-shippuden/", 7
+        )
+
+        self.assertEqual(url, "https://jp-animenities.com/title/naruto-shippuden")
+
+    def test_build_search_url_uses_template(self) -> None:
+        source = StreamingSource(
+            name="AniWatch",
+            base_url="https://jp-animenities.com",
+            search_url_template="https://jp-animenities.com/search/?q={query}",
+            episode_pattern="title/{slug}",
+        )
+
+        adapter = AniWatchSourceAdapter(source)
+
+        self.assertEqual(
+            adapter.build_search_url("naruto shippuden"),
+            "https://jp-animenities.com/search/?q=naruto%20shippuden",
+        )
+
+    def test_get_adapter_for_source_resolves_aniwatch(self) -> None:
+        source = StreamingSource(
+            name="AniWatch",
+            base_url="https://jp-animenities.com",
+            search_url_template="https://jp-animenities.com/search/?q={query}",
+            episode_pattern="title/{slug}",
+        )
+
+        adapter = get_adapter_for_source(source)
+
+        self.assertIsInstance(adapter, AniWatchSourceAdapter)
