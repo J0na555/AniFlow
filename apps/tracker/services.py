@@ -47,6 +47,29 @@ def update_progress(user, tracker_id: str, progress: int) -> dict[str, Any]:
     return response
 
 
+def search_anime(user, query: str, *, limit: int = 20) -> list[dict[str, Any]]:
+    adapter = get_adapter_for_user(user)
+    return adapter.search_anime(query, limit=limit)
+
+
+def save_list_entry(
+    user,
+    tracker_id: str,
+    *,
+    status: str,
+    progress: int | None = None,
+    score: float | None = None,
+) -> dict[str, Any]:
+    adapter = get_adapter_for_user(user)
+    return adapter.save_list_entry(
+        user,
+        tracker_id,
+        status=status,
+        progress=progress,
+        score=score,
+    )
+
+
 def get_recommendations(user, *, limit: int = 10) -> list[dict[str, Any]]:
     adapter = get_adapter_for_user(user)
     return adapter.get_recommendations(user, limit=limit)
