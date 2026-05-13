@@ -231,6 +231,7 @@ def update_progress_payload(user, *, anime_id: int, progress: int) -> dict:
 
 def update_status_payload(user, *, anime_id: int, status: str) -> dict:
     user_anime = update_user_anime_status(user, anime_id=anime_id, status=status)
+
     return {"item": _serialize_user_entry(user_anime)}
 
 
