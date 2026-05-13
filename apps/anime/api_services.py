@@ -9,6 +9,7 @@ from apps.productivity.services import get_productivity_stats
 from apps.recommendations.services import get_recommendations
 from apps.releases.services import get_weekly_releases
 from apps.streaming.router import resolve_streaming_route
+from apps.tracker.services import search_anime as tracker_search_anime
 from apps.tracker.services import sync_user_list
 from apps.tracker.services import update_progress as tracker_update_progress
 
@@ -167,6 +168,60 @@ def get_resume_payload(user, *, limit: int = 10) -> dict:
     return {"items": items}
 
 
+def _serialize_tracker_hit(hit: dict) -> dict:
+    return {
+        "tracker_type": hit.get("tracker_type") or "",
+        "tracker_id": hit.get("tracker_id") or "",
+        "title": (
+            hit.get("title_english")
+            or hit.get("title_romaji")
+            or hit.get("title_native")
+            or ""
+        ),
+        "episodes": hit.get("episodes"),
+        "season": hit.get("season") or "",
+        "season_year": hit.get("season_year"),
+        "studio": hit.get("studio") or "",
+        "cover_image_url": hit.get("cover_image_url") or "",
+        "description": hit.get("description") or "",
+    }
+
+
+def _fetch_tracker_results(user, query: str) -> list[dict]:
+    if not query:
+        return []
+    if not getattr(user, "is_authenticated", False):
+        return []
+    if not getattr(user, "tracker_access_token", ""):
+        return []
+    try:
+        hits = tracker_search_anime(user, query)
+    except Exception:
+        # Surface as "no tracker results" rather than break local search if AniList
+        # is unreachable or returns an error.
+        return []
+
+    owned_keys = {
+        (item["anime__tracker_type"], item["anime__tracker_id"])
+        for item in UserAnime.objects.filter(user=user).values(
+            "anime__tracker_type", "anime__tracker_id"
+        )
+    }
+    tracker_results: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for hit in hits:
+        tracker_type = hit.get("tracker_type") or ""
+        tracker_id = hit.get("tracker_id") or ""
+        if not tracker_type or not tracker_id:
+            continue
+        key = (tracker_type, tracker_id)
+        if key in owned_keys or key in seen:
+            continue
+        seen.add(key)
+        tracker_results.append(_serialize_tracker_hit(hit))
+    return tracker_results
+
+
 def search_anime_payload(user, *, query: str, page: int = 1, page_size: int = 20) -> dict:
     page = max(page, 1)
     page_size = max(min(page_size, 100), 1)
@@ -190,6 +245,7 @@ def search_anime_payload(user, *, query: str, page: int = 1, page_size: int = 20
             "anime_id", "status"
         )
     }
+    tracker_results = _fetch_tracker_results(user, query) if page == 1 else []
     return {
         "results": [
             {
@@ -200,6 +256,7 @@ def search_anime_payload(user, *, query: str, page: int = 1, page_size: int = 20
             }
             for anime in results
         ],
+        "tracker_results": tracker_results,
         "pagination": {
             "page": page,
             "pageSize": page_size,
