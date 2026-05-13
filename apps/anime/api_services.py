@@ -1,16 +1,23 @@
 from __future__ import annotations
 
+import logging
+
 from django.db.models import Q
 
 from apps.anime.models import Anime, UserAnime
+from apps.anime.services import add_to_library
 from apps.anime.services import apply_progress_update
 from apps.anime.services import normalize_tracker_status
 from apps.productivity.services import get_productivity_stats
 from apps.recommendations.services import get_recommendations
 from apps.releases.services import get_weekly_releases
 from apps.streaming.router import resolve_streaming_route
+from apps.tracker.services import save_list_entry as tracker_save_list_entry
+from apps.tracker.services import search_anime as tracker_search_anime
 from apps.tracker.services import sync_user_list
 from apps.tracker.services import update_progress as tracker_update_progress
+
+logger = logging.getLogger(__name__)
 
 
 def _preferred_title(entry: UserAnime) -> str:
@@ -167,6 +174,60 @@ def get_resume_payload(user, *, limit: int = 10) -> dict:
     return {"items": items}
 
 
+def _serialize_tracker_hit(hit: dict) -> dict:
+    return {
+        "tracker_type": hit.get("tracker_type") or "",
+        "tracker_id": hit.get("tracker_id") or "",
+        "title": (
+            hit.get("title_english")
+            or hit.get("title_romaji")
+            or hit.get("title_native")
+            or ""
+        ),
+        "episodes": hit.get("episodes"),
+        "season": hit.get("season") or "",
+        "season_year": hit.get("season_year"),
+        "studio": hit.get("studio") or "",
+        "cover_image_url": hit.get("cover_image_url") or "",
+        "description": hit.get("description") or "",
+    }
+
+
+def _fetch_tracker_results(user, query: str) -> list[dict]:
+    if not query:
+        return []
+    if not getattr(user, "is_authenticated", False):
+        return []
+    if not getattr(user, "tracker_access_token", ""):
+        return []
+    try:
+        hits = tracker_search_anime(user, query)
+    except Exception:
+        # Surface as "no tracker results" rather than break local search if AniList
+        # is unreachable or returns an error.
+        return []
+
+    owned_keys = {
+        (item["anime__tracker_type"], item["anime__tracker_id"])
+        for item in UserAnime.objects.filter(user=user).values(
+            "anime__tracker_type", "anime__tracker_id"
+        )
+    }
+    tracker_results: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for hit in hits:
+        tracker_type = hit.get("tracker_type") or ""
+        tracker_id = hit.get("tracker_id") or ""
+        if not tracker_type or not tracker_id:
+            continue
+        key = (tracker_type, tracker_id)
+        if key in owned_keys or key in seen:
+            continue
+        seen.add(key)
+        tracker_results.append(_serialize_tracker_hit(hit))
+    return tracker_results
+
+
 def search_anime_payload(user, *, query: str, page: int = 1, page_size: int = 20) -> dict:
     page = max(page, 1)
     page_size = max(min(page_size, 100), 1)
@@ -190,6 +251,7 @@ def search_anime_payload(user, *, query: str, page: int = 1, page_size: int = 20
             "anime_id", "status"
         )
     }
+    tracker_results = _fetch_tracker_results(user, query) if page == 1 else []
     return {
         "results": [
             {
@@ -200,6 +262,7 @@ def search_anime_payload(user, *, query: str, page: int = 1, page_size: int = 20
             }
             for anime in results
         ],
+        "tracker_results": tracker_results,
         "pagination": {
             "page": page,
             "pageSize": page_size,
@@ -228,6 +291,34 @@ def update_progress_payload(user, *, anime_id: int, progress: int) -> dict:
     }
 
 
+def add_to_library_payload(
+    user,
+    *,
+    tracker_id: str,
+    status: str,
+    progress: int = 0,
+    score: float | None = None,
+) -> dict:
+    """Add a tracker title to the user's library and return the SPA payload.
+
+    Errors bubble up to the API view, which maps:
+    - ``ValueError`` (invalid status / unknown ``tracker_id``) -> 400/404
+    - ``WatchingLimitReached`` -> 409
+
+    The local ``Anime`` row must already exist (it's upserted by the search
+    flow). If callers ever need a "cold add" path that skips search, plumb
+    a freshly-fetched ``payload`` into :func:`apps.anime.services.add_to_library`.
+    """
+    user_anime = add_to_library(
+        user,
+        tracker_id=tracker_id,
+        status=status,
+        progress=progress,
+        score=score,
+    )
+    return {"item": _serialize_user_entry(user_anime)}
+
+
 def update_status_payload(user, *, anime_id: int, status: str) -> dict:
     normalized = normalize_tracker_status(status)
     if normalized not in {"watching", "completed", "planning", "paused", "dropped", "repeating"}:
@@ -238,7 +329,32 @@ def update_status_payload(user, *, anime_id: int, status: str) -> dict:
     if normalized == "completed" and user_anime.anime.episodes:
         user_anime.progress = user_anime.anime.episodes
     user_anime.save(update_fields=["status", "progress", "updated_at"])
-    return {"item": _serialize_user_entry(user_anime)}
+
+    # Push the change to AniList best-effort. A tracker failure must not roll
+    # back the local write; surface a `tracker_warning` so the SPA can toast
+    # the user and the next sync will reconcile state.
+    tracker_warning: str | None = None
+    if getattr(user, "tracker_access_token", ""):
+        try:
+            tracker_save_list_entry(
+                user,
+                user_anime.anime.tracker_id,
+                status=normalized,
+                progress=user_anime.progress,
+            )
+        except Exception:
+            logger.warning(
+                "Failed to push status update to tracker for user=%s anime=%s",
+                getattr(user, "pk", None),
+                user_anime.anime.tracker_id,
+                exc_info=True,
+            )
+            tracker_warning = "Status saved locally but failed to sync to your tracker."
+
+    payload: dict = {"item": _serialize_user_entry(user_anime)}
+    if tracker_warning:
+        payload["tracker_warning"] = tracker_warning
+    return payload
 
 
 def sync_anilist_payload(user) -> dict:

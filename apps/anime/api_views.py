@@ -8,6 +8,8 @@ from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_http_methods
 
 from .models import UserAnime
+from .services import WatchingLimitReached
+from .api_services import add_to_library_payload
 from .api_services import get_frontend_dashboard_payload
 from .api_services import get_recommendations_payload
 from .api_services import get_releases_payload
@@ -152,6 +154,80 @@ def anime_search_api(request):
     return JsonResponse(
         search_anime_payload(request.user, query=query, page=page, page_size=page_size)
     )
+
+
+@api_login_required
+@require_http_methods(["POST"])
+def add_to_library_api(request):
+    """Add a tracker title to the caller's library.
+
+    Body: ``{"tracker_id": str, "status": str, "progress"?: int, "score"?: float}``.
+
+    Mirrors the error envelopes used by ``progress_api`` / ``status_api`` so
+    the SPA can share a single error handler.
+    """
+    if not getattr(request.user, "tracker_access_token", ""):
+        return _json_error(
+            "Connect your tracker before adding titles.",
+            "tracker_not_connected",
+            status=403,
+        )
+
+    if request.content_type and "application/json" in request.content_type:
+        try:
+            body = json.loads(request.body.decode("utf-8") or "{}")
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return _json_error("Invalid JSON body.", "invalid_body", status=400)
+    else:
+        body = request.POST
+
+    tracker_id = str(body.get("tracker_id") or "").strip()
+    if not tracker_id:
+        return _json_error("Missing tracker_id.", "missing_tracker_id", status=400)
+
+    status = str(body.get("status") or "").strip().lower()
+    if not status:
+        return _json_error("Missing status.", "missing_status", status=400)
+
+    raw_progress = body.get("progress")
+    if raw_progress is None or raw_progress == "":
+        progress = 0
+    else:
+        try:
+            progress = int(raw_progress)
+        except (TypeError, ValueError):
+            return _json_error("Invalid progress.", "invalid_progress", status=400)
+        if progress < 0:
+            return _json_error("Invalid progress.", "invalid_progress", status=400)
+
+    raw_score = body.get("score")
+    if raw_score in (None, ""):
+        score: float | None = None
+    else:
+        try:
+            score = float(raw_score)
+        except (TypeError, ValueError):
+            return _json_error("Invalid score.", "invalid_score", status=400)
+
+    try:
+        payload = add_to_library_payload(
+            request.user,
+            tracker_id=tracker_id,
+            status=status,
+            progress=progress,
+            score=score,
+        )
+    except WatchingLimitReached as exc:
+        return _json_error(str(exc), "watching_limit_reached", status=409)
+    except ValueError as exc:
+        # ``add_to_library`` raises ``ValueError`` for both an unknown
+        # ``status`` and a missing local ``Anime`` row (it converts the
+        # underlying ``Anime.DoesNotExist`` itself). Disambiguate by message
+        # so the SPA can react with the right toast.
+        if "tracker_id" in str(exc):
+            return _json_error(str(exc), "not_found", status=404)
+        return _json_error("Invalid status.", "invalid_status", status=400)
+    return JsonResponse(payload, status=201)
 
 
 @api_login_required

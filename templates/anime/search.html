@@ -143,4 +143,28 @@
       {% endif %}
     </div>
   </div>
+
+  {% if request.user.is_authenticated and query %}
+    <section class="mt-16 mb-8">
+      <div class="flex items-center gap-2 mb-8">
+        <div class="w-1.5 h-5 bg-accent rounded-full"></div>
+        <h2 class="text-sm font-bold text-white uppercase tracking-[0.2em]">Add to your list</h2>
+        <span class="text-[10px] font-black uppercase tracking-widest text-muted">AniList</span>
+      </div>
+
+      {% if not has_tracker_token %}
+        {% include "anime/partials/_search_add_card.html" with needs_tracker_connect=True %}
+      {% elif tracker_results %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          {% for tracker_hit in tracker_results %}
+            {% include "anime/partials/_search_add_card.html" with tracker_hit=tracker_hit search_query=query %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="card-base p-12 text-center text-muted text-sm glass">
+          Either every AniList match for this query is already in your library, AniList found no titles, or the tracker lookup failed.
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
 {% endblock %}

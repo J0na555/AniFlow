@@ -59,6 +59,45 @@ mutation UpdateProgress($mediaId: Int!, $progress: Int!) {
 }
 """
 
+SEARCH_QUERY = """
+query SearchAnime($search: String!, $perPage: Int) {
+  Page(page: 1, perPage: $perPage) {
+    media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+      id
+      title { romaji english native }
+      season
+      seasonYear
+      episodes
+      description
+      coverImage { large }
+      bannerImage
+      studios(isMain: true) { nodes { name } }
+    }
+  }
+}
+"""
+
+SAVE_LIST_ENTRY_MUTATION = """
+mutation SaveListEntry(
+  $mediaId: Int!
+  $status: MediaListStatus
+  $progress: Int
+  $score: Float
+) {
+  SaveMediaListEntry(
+    mediaId: $mediaId
+    status: $status
+    progress: $progress
+    score: $score
+  ) {
+    id
+    status
+    progress
+    score(format: POINT_10_DECIMAL)
+  }
+}
+"""
+
 RECOMMENDATIONS_QUERY = """
 query Recommendations($perPage: Int) {
   Page(page: 1, perPage: $perPage) {
@@ -120,6 +159,24 @@ def _normalize_status(raw: str | None) -> str:
     return value
 
 
+_ANILIST_STATUS_OVERRIDES = {"watching": "CURRENT"}
+_VALID_ANIFLOW_STATUSES = {
+    "watching",
+    "planning",
+    "completed",
+    "paused",
+    "dropped",
+    "repeating",
+}
+
+
+def _to_anilist_status(status: str) -> str:
+    value = (status or "").lower()
+    if value not in _VALID_ANIFLOW_STATUSES:
+        raise ValueError(f"Unsupported AniList status: {status!r}")
+    return _ANILIST_STATUS_OVERRIDES.get(value, value.upper())
+
+
 def _preferred_title(raw: dict | None) -> str:
     titles = raw or {}
     return titles.get("english") or titles.get("romaji") or titles.get("native") or ""
@@ -135,7 +192,9 @@ class AniListAdapter(TrackerAdapter):
         return token
 
     def _request(self, user, query: str, variables: dict | None = None) -> dict:
-        headers = {"Authorization": f"Bearer {self._access_token(user)}"}
+        headers: dict[str, str] = {}
+        if user is not None:
+            headers["Authorization"] = f"Bearer {self._access_token(user)}"
         payload = {"query": query, "variables": variables or {}}
         response = httpx.post(
             ANILIST_API_URL,
@@ -198,6 +257,59 @@ class AniListAdapter(TrackerAdapter):
             UPDATE_PROGRESS_MUTATION,
             {"mediaId": int(tracker_id), "progress": progress},
         )
+        return data["SaveMediaListEntry"]
+
+    def search_anime(self, query: str, *, limit: int = 20) -> list[dict]:
+        data = self._request(
+            None,
+            SEARCH_QUERY,
+            {"search": query, "perPage": limit},
+        )
+        page = data.get("Page") or {}
+        results: list[dict] = []
+        for media in page.get("media", []) or []:
+            media_id = media.get("id")
+            if not media_id:
+                continue
+            titles = media.get("title") or {}
+            studios = media.get("studios") or {}
+            studio_nodes = studios.get("nodes") or []
+            results.append(
+                {
+                    "tracker_type": self.tracker_type,
+                    "tracker_id": str(media_id),
+                    "title_romaji": titles.get("romaji") or "",
+                    "title_english": titles.get("english") or "",
+                    "title_native": titles.get("native") or "",
+                    "season": (media.get("season") or "").lower(),
+                    "season_year": media.get("seasonYear"),
+                    "episodes": media.get("episodes"),
+                    "studio": studio_nodes[0]["name"] if studio_nodes else "",
+                    "cover_image_url": (media.get("coverImage") or {}).get("large") or "",
+                    "banner_image_url": media.get("bannerImage") or "",
+                    "description": media.get("description") or "",
+                }
+            )
+        return results
+
+    def save_list_entry(
+        self,
+        user,
+        tracker_id: str,
+        *,
+        status: str,
+        progress: int | None = None,
+        score: float | None = None,
+    ) -> dict:
+        variables: dict = {
+            "mediaId": int(tracker_id),
+            "status": _to_anilist_status(status),
+        }
+        if progress is not None:
+            variables["progress"] = int(progress)
+        if score is not None:
+            variables["score"] = float(score)
+        data = self._request(user, SAVE_LIST_ENTRY_MUTATION, variables)
         return data["SaveMediaListEntry"]
 
     def get_recommendations(self, user, limit: int = 10) -> list[dict]:

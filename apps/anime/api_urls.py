@@ -10,6 +10,7 @@ urlpatterns = [
     path("watchlist/", api_views.watchlist_api, name="api_watchlist"),
     path("resume/", api_views.resume_api, name="api_resume"),
     path("anime/<int:anime_id>/progress/", api_views.progress_api, name="api_progress"),
+    path("library/add/", api_views.add_to_library_api, name="api_library_add"),
     path("library/<int:anime_id>/progress/", api_views.progress_api, name="api_library_progress"),
     path("library/<int:anime_id>/status/", api_views.status_api, name="api_library_status"),
     path(
