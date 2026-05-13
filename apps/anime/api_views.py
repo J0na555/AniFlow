@@ -9,7 +9,6 @@ from django.views.decorators.http import require_http_methods
 
 from .services import WatchingLimitReached
 from .models import UserAnime
-from .services import WatchingLimitReached
 from .api_services import add_to_library_payload
 from .api_services import get_frontend_dashboard_payload
 from .api_services import get_recommendations_payload

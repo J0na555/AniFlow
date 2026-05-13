@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 
 from apps.anime.models import Anime, UserAnime
+from apps.anime.services import add_to_library
 from apps.anime.services import apply_progress_update, normalize_tracker_status
 from apps.anime.services import update_user_anime_status
 from apps.anime.services import WatchingLimitReached
@@ -24,6 +25,7 @@ from apps.streaming.models import StreamingSource
 from apps.streaming.router import ordered_sources_for_user
 from apps.streaming.router import resolve_streaming_route
 from apps.streaming.sources import get_adapter_for_source
+from apps.tracker.services import search_anime as tracker_search_anime
 from apps.tracker.services import update_progress as tracker_update_progress
 from apps.tracker.services import sync_user_list
 
@@ -307,6 +309,82 @@ def confirm_streaming_mapping(request, anime_id: int, source_id: int):
     return render(request, "anime/confirm_mapping.html", context)
 
 
+def _tracker_hits_not_in_library(user, query: str) -> list[dict]:
+    """AniList search hits excluding titles already on the user's list."""
+    if not query.strip():
+        return []
+    try:
+        hits = tracker_search_anime(user, query)
+    except Exception:
+        return []
+
+    owned_keys = {
+        (e.anime.tracker_type, str(e.anime.tracker_id))
+        for e in UserAnime.objects.filter(user=user).select_related("anime")
+    }
+    results: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for hit in hits:
+        tt = hit.get("tracker_type") or ""
+        tid = str(hit.get("tracker_id") or "")
+        if not tt or not tid:
+            continue
+        key = (tt, tid)
+        if key in owned_keys or key in seen:
+            continue
+        seen.add(key)
+        results.append(hit)
+    return results
+
+
+@login_required
+@require_POST
+def add_to_library_view(request):
+    """HTMX: add an AniList hit from search (payload resolved via optional ``q``)."""
+    if not getattr(request.user, "tracker_access_token", ""):
+        return render(
+            request,
+            "anime/partials/_search_add_card.html",
+            {"needs_tracker_connect": True},
+        )
+
+    tracker_id = (request.POST.get("tracker_id") or "").strip()
+    status = (request.POST.get("status") or "").strip().lower()
+    q = (request.POST.get("q") or "").strip()
+
+    if not tracker_id or not status:
+        return HttpResponseBadRequest("Missing tracker_id or status.")
+
+    payload: dict | None = None
+    if q:
+        for hit in tracker_search_anime(request.user, q):
+            if str(hit.get("tracker_id")) == tracker_id:
+                payload = hit
+                break
+
+    template_ctx: dict = {"tracker_id": tracker_id, "search_query": q}
+
+    try:
+        entry = add_to_library(
+            request.user,
+            tracker_id=tracker_id,
+            status=status,
+            payload=payload,
+        )
+    except WatchingLimitReached as exc:
+        template_ctx["error"] = str(exc)
+        return render(request, "anime/partials/_search_add_card.html", template_ctx)
+    except ValueError as exc:
+        template_ctx["error"] = str(exc)
+        return render(request, "anime/partials/_search_add_card.html", template_ctx)
+
+    return render(
+        request,
+        "anime/partials/_search_add_card.html",
+        {"added": True, "entry": entry, "search_query": q},
+    )
+
+
 def search_anime(request):
     query = request.GET.get("q", "").strip()
     results = []
@@ -343,6 +421,13 @@ def search_anime(request):
         for source in sources
     ]
 
+    tracker_results: list[dict] = []
+    has_tracker_token = False
+    if request.user.is_authenticated and query.strip():
+        has_tracker_token = bool(getattr(request.user, "tracker_access_token", ""))
+        if has_tracker_token:
+            tracker_results = _tracker_hits_not_in_library(request.user, query)
+
     context = {
         "query": query,
         "results": results,
@@ -352,6 +437,8 @@ def search_anime(request):
         "library_status_choices": UserAnime.STATUS_CHOICES
         if request.user.is_authenticated
         else [],
+        "tracker_results": tracker_results,
+        "has_tracker_token": has_tracker_token,
     }
     return render(request, "anime/search.html", context)
 

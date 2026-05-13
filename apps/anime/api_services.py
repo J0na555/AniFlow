@@ -3,6 +3,7 @@ from __future__ import annotations
 from django.db.models import Q
 
 from apps.anime.models import Anime, UserAnime
+from apps.anime.services import add_to_library
 from apps.anime.services import apply_progress_update
 from apps.anime.services import normalize_tracker_status
 from apps.anime.services import update_user_anime_status
@@ -208,6 +209,25 @@ def search_anime_payload(user, *, query: str, page: int = 1, page_size: int = 20
             "hasNext": end < total,
         },
     }
+
+
+def add_to_library_payload(
+    user,
+    *,
+    tracker_id: str,
+    status: str,
+    progress: int = 0,
+    score: float | None = None,
+) -> dict:
+    """Add by ``tracker_id`` using an existing local ``Anime`` row (from search/sync)."""
+    user_anime = add_to_library(
+        user,
+        tracker_id=tracker_id,
+        status=status,
+        progress=progress,
+        score=score,
+    )
+    return {"item": _serialize_user_entry(user_anime)}
 
 
 def update_progress_payload(user, *, anime_id: int, progress: int) -> dict:
