@@ -3,6 +3,7 @@ from __future__ import annotations
 from django.db.models import Q
 
 from apps.anime.models import Anime, UserAnime
+from apps.anime.services import add_to_library
 from apps.anime.services import apply_progress_update
 from apps.anime.services import normalize_tracker_status
 from apps.productivity.services import get_productivity_stats
@@ -283,6 +284,34 @@ def update_progress_payload(user, *, anime_id: int, progress: int) -> dict:
         "item": _serialize_user_entry(updated),
         "tracker_status": tracker_status,
     }
+
+
+def add_to_library_payload(
+    user,
+    *,
+    tracker_id: str,
+    status: str,
+    progress: int = 0,
+    score: float | None = None,
+) -> dict:
+    """Add a tracker title to the user's library and return the SPA payload.
+
+    Errors bubble up to the API view, which maps:
+    - ``ValueError`` (invalid status / unknown ``tracker_id``) -> 400/404
+    - ``WatchingLimitReached`` -> 409
+
+    The local ``Anime`` row must already exist (it's upserted by the search
+    flow). If callers ever need a "cold add" path that skips search, plumb
+    a freshly-fetched ``payload`` into :func:`apps.anime.services.add_to_library`.
+    """
+    user_anime = add_to_library(
+        user,
+        tracker_id=tracker_id,
+        status=status,
+        progress=progress,
+        score=score,
+    )
+    return {"item": _serialize_user_entry(user_anime)}
 
 
 def update_status_payload(user, *, anime_id: int, status: str) -> dict:
