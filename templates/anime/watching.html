@@ -5,66 +5,66 @@
 
 {% block content %}
 <div class="mb-12 flex items-center justify-between">
-  <div class="flex items-center gap-3">
-    <div class="w-2 h-8 bg-accent rounded-full"></div>
-    <h1 class="text-3xl font-black tracking-tight">Currently Watching</h1>
-  </div>
-  <span class="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-muted uppercase tracking-widest">
-    {{ watching_entries|length }} titles
-  </span>
+ <div class="flex items-center gap-3">
+ <div class="w-2 h-8 bg-accent border-4 border-black"></div>
+ <h1 class="text-3xl font-black tracking-tight">Currently Watching</h1>
+ </div>
+ <span class="px-4 py-1.5 border-4 border-black bg-neo-white text-xs font-black text-neo-ink/80 uppercase tracking-widest">
+ {{ watching_entries|length }} titles
+ </span>
 </div>
 
 {% if watching_entries %}
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
-    {% for entry in watching_entries %}
-      <div class="group cursor-pointer animate-slide-up" style="animation-delay: {{ forloop.counter0|multiply:0.05 }}s">
-        <div class="aspect-[2/3] rounded-[32px] overflow-hidden bg-white/5 mb-4 relative premium-shadow group-hover:scale-[1.02] transition-all duration-500">
-          {% if entry.anime.cover_image_url %}
-            <img src="{{ entry.anime.cover_image_url }}" alt="{{ entry.anime.title_english }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-          {% else %}
-            <div class="w-full h-full flex items-center justify-center">
-              <i data-lucide="image" class="w-12 h-12 text-muted"></i>
-            </div>
-          {% endif %}
-          
-          <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-white/10">
-            <div class="h-full bg-accent accent-glow" style="width: {% widthratio entry.progress entry.anime.episodes|default:entry.progress 100 %}%"></div>
-          </div>
-          
-          <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px]">
-            <a href="{% url 'anime_resume' entry.anime_id %}" class="w-16 h-16 rounded-[24px] bg-accent flex items-center justify-center text-background shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
-              <i data-lucide="play" class="w-8 h-8 fill-current"></i>
-            </a>
-            <form method="post" hx-post="{% url 'anime_progress' entry.anime_id %}" hx-swap="none" onclick="event.stopPropagation()">
-              {% csrf_token %}
-              <input type="hidden" name="progress" value="{{ entry.progress|add:1 }}" />
-              <button type="submit" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest backdrop-blur-md transition-all active:scale-95">
-                +1 Episode
-              </button>
-            </form>
-          </div>
-        </div>
-        <h3 class="font-bold text-base line-clamp-2 group-hover:text-accent transition-colors leading-tight px-2">
-          {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
-        </h3>
-        <p class="text-xs text-muted mt-2 font-bold uppercase tracking-widest px-2">{{ entry.progress }} / {{ entry.anime.episodes|default:"?" }} episodes</p>
-        <div class="px-2 mt-3">
-          {% include "anime/partials/_library_status_form.html" with anime_id=entry.anime_id current_status=entry.status status_choices=library_status_choices %}
-        </div>
-      </div>
-    {% endfor %}
-  </div>
+ <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+ {% for entry in watching_entries %}
+ <div class="group cursor-pointer animate-slide-up" style="animation-delay: {{ forloop.counter0|multiply:0.05 }}s">
+ <div class="aspect-[2/3] border-4 border-black overflow-hidden bg-neo-white mb-4 relative neo-shadow-lg transition-all duration-500">
+ {% if entry.anime.cover_image_url %}
+ <img src="{{ entry.anime.cover_image_url }}" alt="{{ entry.anime.title_english }}" class="w-full h-full object-cover transition-transform duration-700">
+ {% else %}
+ <div class="w-full h-full flex items-center justify-center">
+ <i data-lucide="image" class="w-12 h-12 font-bold text-neo-ink/80"></i>
+ </div>
+ {% endif %}
+ 
+ <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-neo-secondary">
+ <div class="h-full bg-accent " style="width: {% widthratio entry.progress entry.anime.episodes|default:entry.progress 100 %}%"></div>
+ </div>
+ 
+ <div class="absolute inset-0 bg-neo-secondary border-4 border-black opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-4 ">
+ <a href="{% url 'anime_resume' entry.anime_id %}" class="neo-icon-box w-16 h-16 bg-neo-accent ">
+ <i data-lucide="play" class="w-8 h-8 fill-current"></i>
+ </a>
+ <form method="post" hx-post="{% url 'anime_progress' entry.anime_id %}" hx-swap="none" onclick="event.stopPropagation()">
+ {% csrf_token %}
+ <input type="hidden" name="progress" value="{{ entry.progress|add:1 }}" />
+ <button type="submit" class="bg-neo-muted hover:bg-neo-secondary px-4 py-2 border-4 border-black text-xs font-black uppercase tracking-widest transition-all ">
+ +1 Episode
+ </button>
+ </form>
+ </div>
+ </div>
+ <h3 class="font-bold text-base line-clamp-2 group-hover:text-accent transition-colors leading-tight px-2">
+ {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
+ </h3>
+ <p class="text-xs font-bold text-neo-ink/80 mt-2 font-bold uppercase tracking-widest px-2">{{ entry.progress }} / {{ entry.anime.episodes|default:"?" }} episodes</p>
+ <div class="px-2 mt-3">
+ {% include "anime/partials/_library_status_form.html" with anime_id=entry.anime_id current_status=entry.status status_choices=library_status_choices %}
+ </div>
+ </div>
+ {% endfor %}
+ </div>
 {% else %}
-  <div class="card-base p-24 text-center glass">
-    <div class="w-24 h-24 bg-white/5 rounded-[32px] flex items-center justify-center mx-auto mb-8">
-      <i data-lucide="play-circle" class="w-12 h-12 text-muted"></i>
-    </div>
-    <h3 class="text-2xl font-black mb-4">Your watching list is empty</h3>
-    <p class="text-muted mb-10 max-w-md mx-auto">Start tracking your progress by searching for an anime you're currently watching.</p>
-    <a href="{% url 'anime_search' %}" class="inline-flex items-center gap-3 bg-accent hover:bg-accent-hover text-background font-black px-8 py-4 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-2xl">
-      <i data-lucide="search" class="w-5 h-5"></i>
-      Search Anime
-    </a>
-  </div>
+ <div class="card-base p-24 text-center ">
+ <div class="w-24 h-24 bg-neo-white border-4 border-black flex items-center justify-center mx-auto mb-8">
+ <i data-lucide="play-circle" class="w-12 h-12 font-bold text-neo-ink/80"></i>
+ </div>
+ <h3 class="text-2xl font-black mb-4">Your watching list is empty</h3>
+ <p class="font-bold text-neo-ink/80 mb-10 max-w-md mx-auto">Start tracking your progress by searching for an anime you're currently watching.</p>
+ <a href="{% url 'anime_search' %}" class="neo-btn-primary !h-14">
+ <i data-lucide="search" class="w-5 h-5"></i>
+ Search Anime
+ </a>
+ </div>
 {% endif %}
 {% endblock %}

@@ -1,23 +1,23 @@
-<div 
-  id="toast-{{ id }}" 
-  class="glass p-4 rounded-2xl flex items-center gap-4 min-w-[300px] animate-slide-up premium-shadow border-l-4 {% if type == 'error' %}border-l-red-500{% else %}border-l-accent{% endif %}"
-  hx-on:load="setTimeout(() => document.getElementById('toast-{{ id }}').remove(), 5000)"
+<div
+ id="toast-{{ id }}"
+ class="bg-neo-white border-4 border-black p-4 flex items-center gap-4 min-w-[280px] max-w-md animate-slide-up neo-shadow-md border-l-8 {% if type == 'error' %}border-l-neo-accent{% else %}border-l-neo-secondary{% endif %}"
+ hx-on:load="setTimeout(() => document.getElementById('toast-{{ id }}').remove(), 5000)"
 >
-  <div class="w-10 h-10 rounded-xl {% if type == 'error' %}bg-red-500/10 text-red-500{% else %}bg-accent/10 text-accent{% endif %} flex items-center justify-center flex-shrink-0">
-    {% if type == 'error' %}
-      <i data-lucide="alert-circle" class="w-5 h-5"></i>
-    {% else %}
-      <i data-lucide="check-circle" class="w-5 h-5"></i>
-    {% endif %}
-  </div>
-  <div class="flex-1">
-    <p class="text-sm font-bold text-white">{{ message }}</p>
-  </div>
-  <button 
-    onclick="this.parentElement.remove()" 
-    class="text-muted hover:text-white transition-colors"
-  >
-    <i data-lucide="x" class="w-4 h-4"></i>
-  </button>
-  <script>lucide.createIcons();</script>
+ <div class="neo-icon-box w-10 h-10 p-0 flex-shrink-0 {% if type == 'error' %}bg-neo-accent{% else %}bg-neo-secondary{% endif %}">
+ {% if type == 'error' %}
+ <i data-lucide="alert-circle" class="w-5 h-5"></i>
+ {% else %}
+ <i data-lucide="check-circle" class="w-5 h-5"></i>
+ {% endif %}
+ </div>
+ <p class="text-sm font-black flex-1 text-neo-ink">{{ message }}</p>
+ <button
+ type="button"
+ onclick="this.parentElement.remove()"
+ class="neo-btn-ghost w-10 h-10 p-0 flex-shrink-0"
+ aria-label="Dismiss"
+ >
+ <i data-lucide="x" class="w-4 h-4"></i>
+ </button>
+ <script>lucide.createIcons();</script>
 </div>

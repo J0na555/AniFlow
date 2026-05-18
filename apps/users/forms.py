@@ -5,9 +5,8 @@ from apps.streaming.models import StreamingSource
 from .models import UserSettings
 
 _FIELD_CLASS = (
-    "w-full bg-white/[0.03] border border-border rounded-2xl py-3 px-4 text-sm "
-    "focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] "
-    "transition-all duration-300 accent-accent"
+    "neo-input w-full text-base h-14 "
+    "focus:outline-none focus-visible:ring-0"
 )
 
 
@@ -33,8 +32,9 @@ class UserSettingsForm(forms.ModelForm):
             "ignore_watching_limit": forms.CheckboxInput(
                 attrs={
                     "class": (
-                        "w-4 h-4 rounded border-border bg-white/[0.03] "
-                        "text-accent focus:ring-accent/40 focus:ring-offset-0"
+                        "w-6 h-6 rounded-none border-4 border-black bg-neo-white "
+                        "text-neo-ink accent-neo-accent focus-visible:ring-2 "
+                        "focus-visible:ring-black focus-visible:ring-offset-2"
                     )
                 }
             ),

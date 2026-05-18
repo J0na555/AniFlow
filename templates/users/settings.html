@@ -3,96 +3,96 @@
 {% block title %}Settings — AniFlow{% endblock %}
 
 {% block content %}
-  <div class="max-w-2xl">
-    <div class="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold">Settings</h1>
-        <p class="text-muted text-sm mt-1">Streaming and watching limits for your account.</p>
-      </div>
-      <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors font-medium">
-        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-        Back to dashboard
-      </a>
-    </div>
+ <div class="max-w-2xl">
+ <div class="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+ <div>
+ <h1 class="text-3xl font-black uppercase tracking-tight">Settings</h1>
+ <p class="font-bold mt-2">Streaming and watching limits for your account.</p>
+ </div>
+ <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 neo-link">
+ <i data-lucide="arrow-left" class="w-4 h-4"></i>
+ Back to dashboard
+ </a>
+ </div>
 
-    {% if saved %}
-      <div class="mb-6 card-base border-accent/30 bg-accent/5 px-5 py-4 flex items-start gap-3">
-        <i data-lucide="check-circle" class="w-5 h-5 text-accent flex-shrink-0 mt-0.5"></i>
-        <p class="text-sm font-medium">Your settings were saved.</p>
-      </div>
-    {% endif %}
+ {% if saved %}
+ <div class="mb-6 card-base bg-neo-secondary px-5 py-4 flex items-start gap-3">
+ <i data-lucide="check-circle" class="w-5 h-5 text-accent flex-shrink-0 mt-0.5"></i>
+ <p class="text-sm font-black">Your settings were saved.</p>
+ </div>
+ {% endif %}
 
-    <form method="post" class="space-y-6">
-      {% csrf_token %}
-      {% if form.non_field_errors %}
-        <div class="card-base border-red-500/40 bg-red-500/5 px-5 py-4 text-sm text-red-200">
-          {{ form.non_field_errors }}
-        </div>
-      {% endif %}
+ <form method="post" class="space-y-6">
+ {% csrf_token %}
+ {% if form.non_field_errors %}
+ <div class="card-base bg-neo-accent px-5 py-4 text-sm font-bold">
+ {{ form.non_field_errors }}
+ </div>
+ {% endif %}
 
-      <section class="card-base p-8">
-        <h2 class="text-lg font-bold mb-1 flex items-center gap-2">
-          <i data-lucide="tv" class="w-5 h-5 text-accent"></i>
-          Streaming
-        </h2>
-        <p class="text-sm text-muted mb-6">Where watch links should prefer to open.</p>
+ <section class="card-base p-8">
+ <h2 class="text-lg font-black uppercase mb-1 flex items-center gap-2">
+ <i data-lucide="tv" class="w-5 h-5 text-accent"></i>
+ Streaming
+ </h2>
+ <p class="text-sm font-bold mb-6">Where watch links should prefer to open.</p>
 
-        <div class="space-y-2">
-          <label for="{{ form.preferred_source.id_for_label }}" class="block text-xs font-bold text-muted uppercase tracking-wider">
-            {{ form.preferred_source.label }}
-          </label>
-          {{ form.preferred_source }}
-          {% if form.preferred_source.help_text %}
-            <p class="text-xs text-muted mt-1.5">{{ form.preferred_source.help_text }}</p>
-          {% endif %}
-          {% for err in form.preferred_source.errors %}
-            <p class="text-xs text-red-300 mt-1">{{ err }}</p>
-          {% endfor %}
-        </div>
-      </section>
+ <div class="space-y-2">
+ <label for="{{ form.preferred_source.id_for_label }}" class="block text-xs font-black uppercase tracking-wider">
+ {{ form.preferred_source.label }}
+ </label>
+ {{ form.preferred_source }}
+ {% if form.preferred_source.help_text %}
+ <p class="text-xs font-bold mt-1.5">{{ form.preferred_source.help_text }}</p>
+ {% endif %}
+ {% for err in form.preferred_source.errors %}
+ <p class="text-xs font-black text-neo-accent mt-1">{{ err }}</p>
+ {% endfor %}
+ </div>
+ </section>
 
-      <section class="card-base p-8">
-        <h2 class="text-lg font-bold mb-1 flex items-center gap-2">
-          <i data-lucide="gauge" class="w-5 h-5 text-accent"></i>
-          Watching limit
-        </h2>
-        <p class="text-sm text-muted mb-6">Cap how many series count toward watching, or turn the limit off.</p>
+ <section class="card-base p-8">
+ <h2 class="text-lg font-black uppercase mb-1 flex items-center gap-2">
+ <i data-lucide="gauge" class="w-5 h-5 text-accent"></i>
+ Watching limit
+ </h2>
+ <p class="text-sm font-bold mb-6">Cap how many series count toward watching, or turn the limit off.</p>
 
-        <div class="space-y-6">
-          <div class="space-y-2">
-            <label for="{{ form.max_watching_limit.id_for_label }}" class="block text-xs font-bold text-muted uppercase tracking-wider">
-              {{ form.max_watching_limit.label }}
-            </label>
-            {{ form.max_watching_limit }}
-            {% if form.max_watching_limit.help_text %}
-              <p class="text-xs text-muted mt-1.5">{{ form.max_watching_limit.help_text }}</p>
-            {% endif %}
-            {% for err in form.max_watching_limit.errors %}
-              <p class="text-xs text-red-300 mt-1">{{ err }}</p>
-            {% endfor %}
-          </div>
+ <div class="space-y-6">
+ <div class="space-y-2">
+ <label for="{{ form.max_watching_limit.id_for_label }}" class="block text-xs font-black uppercase tracking-wider">
+ {{ form.max_watching_limit.label }}
+ </label>
+ {{ form.max_watching_limit }}
+ {% if form.max_watching_limit.help_text %}
+ <p class="text-xs font-bold mt-1.5">{{ form.max_watching_limit.help_text }}</p>
+ {% endif %}
+ {% for err in form.max_watching_limit.errors %}
+ <p class="text-xs font-black text-neo-accent mt-1">{{ err }}</p>
+ {% endfor %}
+ </div>
 
-          <div class="flex items-start gap-3 pt-1">
-            {{ form.ignore_watching_limit }}
-            <div class="min-w-0">
-              <label for="{{ form.ignore_watching_limit.id_for_label }}" class="block text-sm font-semibold cursor-pointer">
-                {{ form.ignore_watching_limit.label }}
-              </label>
-              {% if form.ignore_watching_limit.help_text %}
-                <p class="text-xs text-muted mt-1">{{ form.ignore_watching_limit.help_text }}</p>
-              {% endif %}
-              {% for err in form.ignore_watching_limit.errors %}
-                <p class="text-xs text-red-300 mt-1">{{ err }}</p>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-      </section>
+ <div class="flex items-start gap-3 pt-1">
+ {{ form.ignore_watching_limit }}
+ <div class="min-w-0">
+ <label for="{{ form.ignore_watching_limit.id_for_label }}" class="block text-sm font-black cursor-pointer">
+ {{ form.ignore_watching_limit.label }}
+ </label>
+ {% if form.ignore_watching_limit.help_text %}
+ <p class="text-xs font-bold mt-1">{{ form.ignore_watching_limit.help_text }}</p>
+ {% endif %}
+ {% for err in form.ignore_watching_limit.errors %}
+ <p class="text-xs font-black text-neo-accent mt-1">{{ err }}</p>
+ {% endfor %}
+ </div>
+ </div>
+ </div>
+ </section>
 
-      <button type="submit" class="w-full sm:w-auto bg-accent hover:bg-accent-hover text-background font-bold px-8 py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-        <i data-lucide="save" class="w-5 h-5"></i>
-        Save settings
-      </button>
-    </form>
-  </div>
+ <button type="submit" class="neo-btn-primary w-full sm:w-auto">
+ <i data-lucide="save" class="w-5 h-5"></i>
+ Save settings
+ </button>
+ </form>
+ </div>
 {% endblock %}

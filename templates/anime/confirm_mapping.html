@@ -3,60 +3,60 @@
 {% block title %}Confirm Streaming Match - AniFlow{% endblock %}
 
 {% block content %}
-  <div class="max-w-2xl mx-auto py-12">
-    <div class="text-center mb-12">
-      <div class="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-6">
-        <i data-lucide="help-circle" class="w-10 h-10 text-accent"></i>
-      </div>
-      <h1 class="text-3xl font-bold mb-4">Confirm Streaming Match</h1>
-      <p class="text-muted">
-        We found a possible match on <span class="text-accent font-semibold">{{ source.name }}</span> for
-      </p>
-      <h2 class="text-xl font-bold mt-2">
-        {% firstof anime.title_english anime.title_romaji anime.title_native "Untitled" %}
-      </h2>
-    </div>
+ <div class="max-w-2xl mx-auto py-12">
+ <div class="text-center mb-12">
+ <div class="w-20 h-20 bg-accent/10 border-4 border-black flex items-center justify-center mx-auto mb-6">
+ <i data-lucide="help-circle" class="w-10 h-10 text-accent"></i>
+ </div>
+ <h1 class="text-3xl font-bold mb-4">Confirm Streaming Match</h1>
+ <p class="font-bold text-neo-ink/80">
+ We found a possible match on <span class="text-accent font-semibold">{{ source.name }}</span> for
+ </p>
+ <h2 class="text-xl font-bold mt-2">
+ {% firstof anime.title_english anime.title_romaji anime.title_native "Untitled" %}
+ </h2>
+ </div>
 
-    <div class="card-base p-8 mb-8">
-      <div class="grid grid-cols-2 gap-8 mb-8">
-        <div>
-          <div class="text-xs text-muted font-medium uppercase tracking-wider mb-1">Candidate ID</div>
-          <div class="text-lg font-mono bg-white/5 p-2 rounded border border-border">{{ mapping.source_identifier }}</div>
-        </div>
-        <div>
-          <div class="text-xs text-muted font-medium uppercase tracking-wider mb-1">Confidence Score</div>
-          <div class="text-lg font-bold text-accent">{{ mapping.confidence_score }}</div>
-        </div>
-      </div>
+ <div class="card-base p-8 mb-8">
+ <div class="grid grid-cols-2 gap-8 mb-8">
+ <div>
+ <div class="text-xs font-bold text-neo-ink/80 font-medium uppercase tracking-wider mb-1">Candidate ID</div>
+ <div class="text-lg font-mono bg-neo-white p-2 rounded ">{{ mapping.source_identifier }}</div>
+ </div>
+ <div>
+ <div class="text-xs font-bold text-neo-ink/80 font-medium uppercase tracking-wider mb-1">Confidence Score</div>
+ <div class="text-lg font-bold text-accent">{{ mapping.confidence_score }}</div>
+ </div>
+ </div>
 
-      <div class="flex flex-col gap-3">
-        <form method="post">
-          {% csrf_token %}
-          <button type="submit" class="w-full bg-accent hover:bg-accent-hover text-background font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-            <i data-lucide="check-circle" class="w-5 h-5"></i>
-            Confirm and continue to episode {{ next_episode }}
-          </button>
-        </form>
-        
-        {% if search_url %}
-          <a href="{{ search_url }}" target="_blank" rel="noopener noreferrer" class="w-full bg-white/5 hover:bg-white/10 border border-border text-center py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
-            <i data-lucide="search" class="w-5 h-5"></i>
-            Open {{ source.name }} search
-          </a>
-        {% endif %}
-        
-        <a href="{% url 'dashboard' %}" class="w-full text-center py-3 text-muted hover:text-white transition-colors flex items-center justify-center gap-2">
-          <i data-lucide="arrow-left" class="w-4 h-4"></i>
-          Back to Dashboard
-        </a>
-      </div>
-    </div>
+ <div class="flex flex-col gap-3">
+ <form method="post">
+ {% csrf_token %}
+ <button type="submit" class="neo-btn-primary w-full">
+ <i data-lucide="check-circle" class="w-5 h-5"></i>
+ Confirm and continue to episode {{ next_episode }}
+ </button>
+ </form>
+ 
+ {% if search_url %}
+ <a href="{{ search_url }}" target="_blank" rel="noopener noreferrer" class="neo-btn-secondary w-full">
+ <i data-lucide="search" class="w-5 h-5"></i>
+ Open {{ source.name }} search
+ </a>
+ {% endif %}
+ 
+ <a href="{% url 'dashboard' %}" class="w-full text-center py-3 font-bold text-neo-ink/80 hover:text-neo-ink transition-colors flex items-center justify-center gap-2">
+ <i data-lucide="arrow-left" class="w-4 h-4"></i>
+ Back to Dashboard
+ </a>
+ </div>
+ </div>
 
-    <div class="card-base p-6 bg-white/5 border-dashed">
-      <p class="text-xs text-muted flex gap-2">
-        <i data-lucide="info" class="w-4 h-4 flex-shrink-0"></i>
-        Confirming this match will save it for future use. If the match is incorrect, you can search manually on the streaming site.
-      </p>
-    </div>
-  </div>
+ <div class="card-base p-6 bg-neo-white border-dashed">
+ <p class="text-xs font-bold text-neo-ink/80 flex gap-2">
+ <i data-lucide="info" class="w-4 h-4 flex-shrink-0"></i>
+ Confirming this match will save it for future use. If the match is incorrect, you can search manually on the streaming site.
+ </p>
+ </div>
+ </div>
 {% endblock %}
