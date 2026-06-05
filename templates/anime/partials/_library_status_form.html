@@ -1,0 +1,23 @@
+{% comment %}
+HTMX form: POST status for one library row. Expects: anime_id, current_status.
+{% endcomment %}
+<form
+ method="post"
+ action="{% url 'anime_status' anime_id %}"
+ hx-post="{% url 'anime_status' anime_id %}"
+ hx-swap="none"
+ class="inline-flex items-center gap-2"
+>
+ {% csrf_token %}
+ <label class="sr-only" for="library-status-{{ anime_id }}">List status</label>
+ <select
+ name="status"
+ id="library-status-{{ anime_id }}"
+ class="neo-input !h-10 !text-xs !px-2 max-w-[11rem] cursor-pointer font-black uppercase tracking-wider"
+ onchange="this.form.requestSubmit()"
+ >
+ {% for value, label in status_choices %}
+ <option value="{{ value }}" {% if value == current_status %}selected{% endif %}>{{ label }}</option>
+ {% endfor %}
+ </select>
+</form>

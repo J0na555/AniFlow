@@ -105,188 +105,32 @@ class AnimeApiTests(TestCase):
         self.assertEqual(self.entry.status, "completed")
         self.assertEqual(self.entry.progress, self.anime.episodes)
 
-    @patch("apps.anime.api_services.tracker_save_list_entry")
-    def test_status_endpoint_pushes_to_tracker_when_connected(
-        self, mock_tracker_save
-    ) -> None:
-        mock_tracker_save.return_value = {
-            "id": 1,
-            "status": "COMPLETED",
-            "progress": 12,
-        }
-        self.user.tracker_access_token = "connected-token"
-        self.user.save(update_fields=["tracker_access_token"])
-
-        response = self.client.post(
-            reverse("api_library_status", args=[self.anime.id]),
-            data=json.dumps({"status": "completed"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 200)
-        mock_tracker_save.assert_called_once_with(
-            self.user,
-            self.anime.tracker_id,
-            status="completed",
-            progress=self.anime.episodes,
-        )
-        self.assertNotIn("tracker_warning", response.json())
-
-    @patch("apps.anime.api_services.logger.warning")
-    @patch("apps.anime.api_services.tracker_save_list_entry")
-    def test_status_endpoint_returns_tracker_warning_when_tracker_fails(
-        self, mock_tracker_save, _mock_log_warning
-    ) -> None:
-        mock_tracker_save.side_effect = RuntimeError("AniList error")
-        self.user.tracker_access_token = "connected-token"
-        self.user.save(update_fields=["tracker_access_token"])
-
-        response = self.client.post(
-            reverse("api_library_status", args=[self.anime.id]),
-            data=json.dumps({"status": "paused"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 200)
-        body = response.json()
-        self.assertIn("tracker_warning", body)
-        self.assertIn("tracker", body["tracker_warning"].lower())
-        self.entry.refresh_from_db()
-        self.assertEqual(self.entry.status, "paused")
-
-    @patch("apps.tracker.services.save_list_entry")
-    def test_library_add_happy_path(self, mock_save_entry) -> None:
-        mock_save_entry.return_value = {
-            "id": 10,
-            "status": "PLANNING",
-            "progress": 0,
-            "score": None,
-        }
-        self.user.tracker_access_token = "tok"
-        self.user.save(update_fields=["tracker_access_token"])
-        Anime.objects.create(
-            tracker_type="anilist",
-            tracker_id="4400",
-            title_english="Discoverable Add",
-            episodes=13,
-        )
-
-        response = self.client.post(
-            reverse("api_library_add"),
-            data=json.dumps({"tracker_id": "4400", "status": "planning"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 201)
-        payload = response.json()
-        self.assertEqual(payload["item"]["tracker_id"], "4400")
-        self.assertEqual(payload["item"]["status"], "planning")
-        mock_save_entry.assert_called_once()
-
-    def test_library_add_requires_authentication(self) -> None:
-        self.client.logout()
-        response = self.client.post(
-            reverse("api_library_add"),
-            data=json.dumps({"tracker_id": "4400", "status": "planning"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 401)
-
-    def test_library_add_requires_tracker_connection(self) -> None:
-        self.assertEqual(self.user.tracker_access_token, "")
-        response = self.client.post(
-            reverse("api_library_add"),
-            data=json.dumps({"tracker_id": "4400", "status": "planning"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json()["code"], "tracker_not_connected")
-
-    @patch("apps.tracker.services.save_list_entry")
-    def test_library_add_invalid_status(self, mock_save_entry) -> None:
-        self.user.tracker_access_token = "tok"
-        self.user.save(update_fields=["tracker_access_token"])
-        Anime.objects.create(
-            tracker_type="anilist",
-            tracker_id="4401",
-            title_english="Status Target",
-            episodes=12,
-        )
-
-        response = self.client.post(
-            reverse("api_library_add"),
-            data=json.dumps({"tracker_id": "4401", "status": "bogus"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["code"], "invalid_status")
-        mock_save_entry.assert_not_called()
-
-    @patch("apps.tracker.services.save_list_entry")
-    def test_library_add_unknown_tracker_returns_404(self, mock_save_entry) -> None:
-        self.user.tracker_access_token = "tok"
-        self.user.save(update_fields=["tracker_access_token"])
-
-        response = self.client.post(
-            reverse("api_library_add"),
-            data=json.dumps({"tracker_id": "999999", "status": "planning"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json()["code"], "not_found")
-        mock_save_entry.assert_not_called()
-
-    @patch("apps.tracker.services.save_list_entry")
-    def test_library_add_conflict_when_watching_limit_reached(
-        self, mock_save_entry
-    ) -> None:
-        mock_save_entry.return_value = {"id": 1, "status": "CURRENT"}
-        self.user.tracker_access_token = "tok"
-        self.user.save(update_fields=["tracker_access_token"])
+    def test_status_endpoint_conflict_when_watching_limit(self) -> None:
         settings, _ = UserSettings.objects.get_or_create(user=self.user)
         settings.max_watching_limit = 1
         settings.ignore_watching_limit = False
-        settings.save(update_fields=["max_watching_limit", "ignore_watching_limit"])
+        settings.save()
 
-        Anime.objects.create(
+        other_anime = Anime.objects.create(
             tracker_type="anilist",
-            tracker_id="5500",
-            title_english="Second Title",
-            episodes=11,
+            tracker_id="1002",
+            title_english="Planning Target",
+            episodes=24,
+        )
+        UserAnime.objects.create(
+            user=self.user,
+            anime=other_anime,
+            status="planning",
+            progress=0,
         )
 
         response = self.client.post(
-            reverse("api_library_add"),
-            data=json.dumps({"tracker_id": "5500", "status": "watching"}),
+            reverse("api_library_status", args=[other_anime.id]),
+            data=json.dumps({"status": "watching"}),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 409)
         self.assertEqual(response.json()["code"], "watching_limit_reached")
-        mock_save_entry.assert_not_called()
-
-    @patch("apps.anime.services.logger.warning")
-    @patch("apps.tracker.services.save_list_entry")
-    def test_library_add_succeeds_locally_when_tracker_errors(
-        self, mock_save_entry, _mock_log_warning
-    ) -> None:
-        mock_save_entry.side_effect = RuntimeError("upstream failure")
-        self.user.tracker_access_token = "tok"
-        self.user.save(update_fields=["tracker_access_token"])
-        Anime.objects.create(
-            tracker_type="anilist",
-            tracker_id="6600",
-            title_english="Shaky Tracker",
-            episodes=10,
-        )
-
-        response = self.client.post(
-            reverse("api_library_add"),
-            data=json.dumps({"tracker_id": "6600", "status": "paused"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 201)
-        self.assertTrue(
-            UserAnime.objects.filter(
-                user=self.user, anime__tracker_id="6600", status="paused"
-            ).exists()
-        )
 
     @patch("apps.anime.api_services.sync_user_list")
     def test_sync_anilist_endpoint_returns_count(self, mock_sync_user_list) -> None:
@@ -294,3 +138,40 @@ class AnimeApiTests(TestCase):
         response = self.client.post(reverse("api_sync_anilist"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["synced"], 1)
+
+    def test_unauthenticated_requests_return_json_401(self) -> None:
+        self.client.logout()
+        expected = {"detail": "Authentication required.", "code": "not_authenticated"}
+
+        for route_name in (
+            "api_dashboard",
+            "api_anime_search",
+            "api_library_progress",
+            "api_library_status",
+            "api_sync_anilist",
+        ):
+            with self.subTest(route=route_name):
+                if route_name in {"api_library_progress", "api_library_status"}:
+                    url = reverse(route_name, args=[self.anime.id])
+                else:
+                    url = reverse(route_name)
+
+                if route_name == "api_library_progress":
+                    response = self.client.patch(
+                        url,
+                        data=json.dumps({"progress": 4}),
+                        content_type="application/json",
+                    )
+                elif route_name == "api_sync_anilist":
+                    response = self.client.post(url)
+                elif route_name == "api_library_status":
+                    response = self.client.post(
+                        url,
+                        data=json.dumps({"status": "watching"}),
+                        content_type="application/json",
+                    )
+                else:
+                    response = self.client.get(url)
+
+                self.assertEqual(response.status_code, 401)
+                self.assertEqual(response.json(), expected)

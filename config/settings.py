@@ -185,6 +185,7 @@ WHITENOISE_USE_FINDERS = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "users.User"
+LOGIN_URL = "/auth/anilist/login/"
 
 SESSION_COOKIE_SECURE = get_bool_env("COOKIE_SECURE", default=False)
 CSRF_COOKIE_SECURE = get_bool_env("COOKIE_SECURE", default=False)

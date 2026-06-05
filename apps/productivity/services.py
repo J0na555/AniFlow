@@ -7,7 +7,7 @@ from django.db.models import QuerySet, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
-from apps.anime.models import UserAnime
+from apps.anime.models import UserAnime, UserAnimeProgressEvent
 from apps.users.models import UserSettings
 
 
@@ -51,17 +51,26 @@ def _entries_for_user(user) -> QuerySet[UserAnime]:
     return UserAnime.objects.filter(user=user)
 
 
+def get_weekly_episodes_watched(user) -> int:
+    week_start = _start_of_week()
+    total = (
+        UserAnimeProgressEvent.objects.filter(
+            user=user,
+            created_at__date__gte=week_start,
+        )
+        .aggregate(total=Coalesce(Sum("delta"), 0))
+        .get("total", 0)
+    )
+    return int(total or 0)
+
+
 def get_productivity_stats(user, *, entries: QuerySet[UserAnime] | None = None) -> ProductivityStats:
     base_entries = entries if entries is not None else _entries_for_user(user)
     watching_count = base_entries.filter(status="watching").count()
     completed_count = base_entries.filter(status="completed").count()
     started_count = base_entries.exclude(status="planning").count()
     completion_rate = round((completed_count / started_count) * 100, 1) if started_count else 0.0
-    weekly_episodes = (
-        base_entries.filter(updated_at__date__gte=_start_of_week())
-        .aggregate(total=Coalesce(Sum("progress"), 0))
-        .get("total", 0)
-    )
+    weekly_episodes = get_weekly_episodes_watched(user)
     return ProductivityStats(
         watching_count=watching_count,
         completed_count=completed_count,

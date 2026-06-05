@@ -6,13 +6,15 @@ from urllib.parse import urlencode, urlparse
 import httpx
 from django.conf import settings
 from django.contrib.auth import get_user_model, login, logout
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 
 from apps.tracker.adapters.anilist_adapter import ANILIST_API_URL
 from apps.tracker.services import TRACKER_TYPE_ANILIST, sync_user_list
 
+from .forms import UserSettingsForm
 from .models import UserSettings
 
 ANILIST_AUTHORIZE_URL = "https://anilist.co/api/v2/oauth/authorize"
@@ -208,3 +210,21 @@ def anilist_complete(request: HttpRequest) -> HttpResponse:
 def logout_view(request: HttpRequest) -> HttpResponse:
     logout(request)
     return redirect("dashboard")
+
+
+@login_required
+def user_settings(request: HttpRequest) -> HttpResponse:
+    user_settings_row, _ = UserSettings.objects.get_or_create(user=request.user)
+    saved = False
+    if request.method == "POST":
+        form = UserSettingsForm(request.POST, instance=user_settings_row)
+        if form.is_valid():
+            form.save()
+            saved = True
+    else:
+        form = UserSettingsForm(instance=user_settings_row)
+    return render(
+        request,
+        "users/settings.html",
+        {"form": form, "saved": saved},
+    )

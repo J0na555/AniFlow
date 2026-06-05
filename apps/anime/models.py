@@ -33,8 +33,8 @@ class Anime(models.Model):
 
 class UserAnime(models.Model):
     STATUS_CHOICES = [
-        ("watching", "Watching"),
         ("planning", "Planning"),
+        ("watching", "Watching"),
         ("completed", "Completed"),
         ("dropped", "Dropped"),
         ("paused", "Paused"),
@@ -66,4 +66,27 @@ class UserAnime(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.username} -> {self.anime}"
+
+
+class UserAnimeProgressEvent(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="progress_events",
+    )
+    anime = models.ForeignKey(
+        Anime,
+        on_delete=models.CASCADE,
+        related_name="progress_events",
+    )
+    delta = models.PositiveSmallIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user", "created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user.username} +{self.delta} on {self.anime}"
 

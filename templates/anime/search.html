@@ -4,167 +4,172 @@
 {% block title %}Search Anime - AniFlow{% endblock %}
 
 {% block top_bar_search %}
-  <form method="get" action="{% url 'anime_search' %}" class="relative group max-w-md">
-    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-accent transition-colors"></i>
-    <input 
-      type="text" 
-      name="q" 
-      placeholder="Search anime, movies, series..." 
-      value="{{ query }}"
-      class="w-full bg-white/[0.03] border border-border rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] transition-all duration-300"
-    />
-  </form>
+ <form method="get" action="{% url 'anime_search' %}" class="relative group max-w-md">
+ <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 font-bold text-neo-ink/80 group-focus-within:text-accent transition-colors"></i>
+ <input 
+ type="text" 
+ name="q" 
+ placeholder="Search anime, movies, series..." 
+ value="{{ query }}"
+ class="neo-input pl-12 pr-4 text-base w-full"
+ />
+ </form>
 {% endblock %}
 
 {% block content %}
-  <div class="mb-12 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-2 h-8 bg-accent rounded-full"></div>
-      <h1 class="text-3xl font-black tracking-tight">Search Results</h1>
-    </div>
-    <a href="{% url 'dashboard' %}" class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-5 py-2.5 rounded-2xl text-sm font-bold text-muted hover:text-white transition-all">
-      <i data-lucide="arrow-left" class="w-4 h-4"></i>
-      Back to Dashboard
-    </a>
-  </div>
+ <div class="mb-12 flex items-center justify-between">
+ <div class="flex items-center gap-3">
+ <div class="w-2 h-8 bg-accent border-4 border-black"></div>
+ <h1 class="text-3xl font-black tracking-tight">Search Results</h1>
+ </div>
+ <a href="{% url 'dashboard' %}" class="neo-btn-ghost">
+ <i data-lucide="arrow-left" class="w-4 h-4"></i>
+ Back to Dashboard
+ </a>
+ </div>
 
-  {% if unauthenticated %}
-    <div class="card-base p-8 mb-12 bg-accent/5 border-accent/20 flex items-center justify-between glass">
-      <div class="flex items-center gap-6">
-        <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center border border-accent/20">
-          <i data-lucide="info" class="w-7 h-7 text-accent"></i>
-        </div>
-        <div>
-          <p class="text-lg font-black text-white mb-1">Connect AniList</p>
-          <p class="text-sm text-muted font-medium">Sign in to see your library, track progress, and get personalized results.</p>
-        </div>
-      </div>
-      <a href="{% url 'anilist_login' %}" class="bg-accent hover:bg-accent-hover text-background font-black px-8 py-3.5 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl">
-        Connect Now
-      </a>
-    </div>
-  {% endif %}
+ {% if unauthenticated %}
+ <div class="card-base p-8 mb-12 bg-neo-muted flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+ <div class="flex items-center gap-6">
+ <div class="neo-icon-box flex-shrink-0 bg-neo-secondary">
+ <i data-lucide="info" class="w-7 h-7 text-accent"></i>
+ </div>
+ <div>
+ <p class="text-lg font-black text-neo-ink mb-1">Connect AniList</p>
+ <p class="text-sm font-bold text-neo-ink/80 font-medium">Sign in to see your library, track progress, and get personalized results.</p>
+ </div>
+ </div>
+ <a href="{% url 'anilist_login' %}" class="neo-btn-primary">
+ Connect Now
+ </a>
+ </div>
+ {% endif %}
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-    <!-- Local Library Matches -->
-    <div class="lg:col-span-2">
-      <div class="flex items-center gap-2 mb-8">
-        <div class="w-1.5 h-5 bg-accent rounded-full"></div>
-        <h2 class="text-sm font-bold text-white uppercase tracking-[0.2em]">Matches in Your Library</h2>
-      </div>
-      
-      {% if results %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {% for anime in results %}
-            {% with entry=user_entries|dict_get:anime.id %}
-              <div class="card-base p-5 flex gap-6 group hover:border-accent/30 premium-shadow animate-slide-up" style="animation-delay: {{ forloop.counter0|multiply:0.05 }}s">
-                <div class="w-24 h-32 rounded-2xl overflow-hidden bg-white/5 flex-shrink-0 shadow-2xl">
-                  {% if anime.cover_image_url %}
-                    <img src="{{ anime.cover_image_url }}" alt="{{ anime.title_english }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                  {% else %}
-                    <div class="w-full h-full flex items-center justify-center">
-                      <i data-lucide="image" class="w-10 h-10 text-muted"></i>
-                    </div>
-                  {% endif %}
-                </div>
-                <div class="flex flex-col justify-between min-w-0 flex-1">
-                  <div>
-                    <h3 class="font-bold text-base line-clamp-2 mb-2 group-hover:text-accent transition-colors leading-tight">
-                      {% firstof anime.title_english anime.title_romaji anime.title_native "Untitled" %}
-                    </h3>
-                    <p class="text-xs text-muted font-bold uppercase tracking-widest">Episodes: {{ anime.episodes|default:"?" }}</p>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    {% if entry %}
-                      {% if entry.status != "completed" and entry.status != "dropped" %}
-                        <a href="{% url 'anime_resume' anime.id %}" class="bg-accent/10 hover:bg-accent text-accent hover:text-background text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-accent/20">
-                          <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
-                          Resume
-                        </a>
-                      {% else %}
-                        <a href="{% url 'anime_play' anime.id %}" target="_blank" rel="noopener noreferrer" class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-white/10">
-                          <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
-                          Play
-                        </a>
-                        <span class="text-[10px] text-accent font-black uppercase tracking-widest">Completed</span>
-                      {% endif %}
-                    {% else %}
-                      <a href="{% url 'anime_play' anime.id %}" target="_blank" rel="noopener noreferrer" class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-white/10">
-                        <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
-                        Play
-                      </a>
-                      <span class="text-[10px] text-muted font-black uppercase tracking-widest">Not in library</span>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-            {% endwith %}
-          {% endfor %}
-        </div>
-      {% elif query %}
-        <div class="card-base p-24 text-center glass">
-          <div class="w-24 h-24 bg-white/5 rounded-[32px] flex items-center justify-center mx-auto mb-8">
-            <i data-lucide="search-x" class="w-12 h-12 text-muted"></i>
-          </div>
-          <p class="text-lg text-muted font-medium">No local matches found for "{{ query }}".</p>
-        </div>
-      {% else %}
-        <div class="card-base p-24 text-center glass">
-          <p class="text-lg text-muted font-medium">Enter a search term to see results from your library.</p>
-        </div>
-      {% endif %}
-    </div>
+ <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+ <!-- Local Library Matches -->
+ <div class="lg:col-span-2">
+ <div class="flex items-center gap-2 mb-8">
+ <div class="w-1.5 h-5 bg-accent border-4 border-black"></div>
+ <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Matches in Your Library</h2>
+ </div>
+ 
+ {% if results %}
+ <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+ {% for anime in results %}
+ {% with entry=user_entries|dict_get:anime.id %}
+ <div class="card-base p-5 flex gap-6 group hover:border-accent/30 neo-shadow-lg animate-slide-up" style="animation-delay: {{ forloop.counter0|multiply:0.05 }}s">
+ <div class="w-24 h-32 border-4 border-black overflow-hidden bg-neo-white flex-shrink-0 neo-shadow-md">
+ {% if anime.cover_image_url %}
+ <img src="{{ anime.cover_image_url }}" alt="{{ anime.title_english }}" class="w-full h-full object-cover transition-transform duration-700">
+ {% else %}
+ <div class="w-full h-full flex items-center justify-center">
+ <i data-lucide="image" class="w-10 h-10 font-bold text-neo-ink/80"></i>
+ </div>
+ {% endif %}
+ </div>
+ <div class="flex flex-col justify-between min-w-0 flex-1">
+ <div>
+ <h3 class="font-bold text-base line-clamp-2 mb-2 group-hover:text-accent transition-colors leading-tight">
+ {% firstof anime.title_english anime.title_romaji anime.title_native "Untitled" %}
+ </h3>
+ <p class="text-xs font-black text-neo-ink uppercase tracking-widest">Episodes: {{ anime.episodes|default:"?" }}</p>
+ </div>
+ <div class="flex flex-col gap-3">
+ <div class="flex items-center gap-3 flex-wrap">
+ {% if entry %}
+ {% if entry.status != "completed" and entry.status != "dropped" %}
+ <a href="{% url 'anime_resume' anime.id %}" class="bg-accent/10 hover:bg-accent text-accent hover:text-background text-[10px] font-black uppercase tracking-widest px-4 py-2 border-4 border-black transition-all flex items-center gap-2 border border-accent/20">
+ <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+ Resume
+ </a>
+ {% else %}
+ <a href="{% url 'anime_play' anime.id %}" target="_blank" rel="noopener noreferrer" class="bg-neo-white hover:bg-neo-secondary text-neo-ink text-[10px] font-black uppercase tracking-widest px-4 py-2 border-4 border-black transition-all flex items-center gap-2 border border-white/10">
+ <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+ Play
+ </a>
+ <span class="text-[10px] text-accent font-black uppercase tracking-widest">{% if entry.status == "completed" %}Completed{% else %}Dropped{% endif %}</span>
+ {% endif %}
+ {% else %}
+ <a href="{% url 'anime_play' anime.id %}" target="_blank" rel="noopener noreferrer" class="bg-neo-white hover:bg-neo-secondary text-neo-ink text-[10px] font-black uppercase tracking-widest px-4 py-2 border-4 border-black transition-all flex items-center gap-2 border border-white/10">
+ <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+ Play
+ </a>
+ <span class="text-[10px] font-bold text-neo-ink/80 font-black uppercase tracking-widest">Not in library</span>
+ {% endif %}
+ </div>
+ {% if entry and library_status_choices %}
+ {% include "anime/partials/_library_status_form.html" with anime_id=anime.id current_status=entry.status status_choices=library_status_choices %}
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ {% endwith %}
+ {% endfor %}
+ </div>
+ {% elif query %}
+ <div class="card-base p-24 text-center ">
+ <div class="w-24 h-24 bg-neo-white border-4 border-black flex items-center justify-center mx-auto mb-8">
+ <i data-lucide="search-x" class="w-12 h-12 font-bold text-neo-ink/80"></i>
+ </div>
+ <p class="text-lg font-bold text-neo-ink/80 font-medium">No local matches found for "{{ query }}".</p>
+ </div>
+ {% else %}
+ <div class="card-base p-24 text-center ">
+ <p class="text-lg font-bold text-neo-ink/80 font-medium">Enter a search term to see results from your library.</p>
+ </div>
+ {% endif %}
+ </div>
 
-    <!-- External Streaming Search -->
-    <div>
-      <div class="flex items-center gap-2 mb-8">
-        <div class="w-1.5 h-5 bg-accent rounded-full"></div>
-        <h2 class="text-sm font-bold text-white uppercase tracking-[0.2em]">Streaming Sites</h2>
-      </div>
-      
-      {% if query %}
-        <div class="space-y-4">
-          {% for item in source_links %}
-            <a href="{{ item.search_url }}" target="_blank" rel="noopener noreferrer" class="card-base p-5 flex items-center justify-between hover:bg-white/[0.05] transition-all group hover:scale-[1.02] active:scale-[0.98]">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-accent/30 transition-colors">
-                  <i data-lucide="globe" class="w-6 h-6 text-muted group-hover:text-accent transition-all duration-500 group-hover:rotate-12"></i>
-                </div>
-                <span class="font-bold text-base">{{ item.source.name }}</span>
-              </div>
-              <i data-lucide="external-link" class="w-5 h-5 text-muted group-hover:text-accent transition-all group-hover:translate-x-1 group-hover:-translate-y-1"></i>
-            </a>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="card-base p-12 text-center text-muted text-sm glass">
-          Enter a title to search streaming sites.
-        </div>
-      {% endif %}
-    </div>
-  </div>
+ <!-- External Streaming Search -->
+ <div>
+ <div class="flex items-center gap-2 mb-8">
+ <div class="w-1.5 h-5 bg-accent border-4 border-black"></div>
+ <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Streaming Sites</h2>
+ </div>
+ 
+ {% if query %}
+ <div class="space-y-4">
+ {% for item in source_links %}
+ <a href="{{ item.search_url }}" target="_blank" rel="noopener noreferrer" class="card-base p-5 flex items-center justify-between transition-all group ">
+ <div class="flex items-center gap-4">
+ <div class="w-12 h-12 border-4 border-black bg-neo-white flex items-center justify-center border border-white/10 group-hover:border-accent/30 transition-colors">
+ <i data-lucide="globe" class="w-6 h-6 font-bold text-neo-ink/80 group-hover:text-accent transition-all duration-500 group-hover:rotate-12"></i>
+ </div>
+ <span class="font-bold text-base">{{ item.source.name }}</span>
+ </div>
+ <i data-lucide="external-link" class="w-5 h-5 font-bold text-neo-ink/80 group-hover:text-accent transition-all group-hover:translate-x-1 group-hover:-translate-y-1"></i>
+ </a>
+ {% endfor %}
+ </div>
+ {% else %}
+ <div class="card-base p-12 text-center font-bold text-neo-ink/80 text-sm ">
+ Enter a title to search streaming sites.
+ </div>
+ {% endif %}
+ </div>
+ </div>
 
-  {% if request.user.is_authenticated and query %}
-    <section class="mt-16 mb-8">
-      <div class="flex items-center gap-2 mb-8">
-        <div class="w-1.5 h-5 bg-accent rounded-full"></div>
-        <h2 class="text-sm font-bold text-white uppercase tracking-[0.2em]">Add to your list</h2>
-        <span class="text-[10px] font-black uppercase tracking-widest text-muted">AniList</span>
-      </div>
+ {% if request.user.is_authenticated and query %}
+ <section class="mt-16 mb-8">
+ <div class="flex items-center gap-2 mb-8">
+ <div class="w-1.5 h-5 bg-accent border-4 border-black"></div>
+ <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Add to your list</h2>
+ <span class="text-[10px] font-black uppercase tracking-widest font-bold text-neo-ink/80">AniList</span>
+ </div>
 
-      {% if not has_tracker_token %}
-        {% include "anime/partials/_search_add_card.html" with needs_tracker_connect=True %}
-      {% elif tracker_results %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-          {% for tracker_hit in tracker_results %}
-            {% include "anime/partials/_search_add_card.html" with tracker_hit=tracker_hit search_query=query %}
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="card-base p-12 text-center text-muted text-sm glass">
-          Either every AniList match for this query is already in your library, AniList found no titles, or the tracker lookup failed.
-        </div>
-      {% endif %}
-    </section>
-  {% endif %}
+ {% if not has_tracker_token %}
+ {% include "anime/partials/_search_add_card.html" with needs_tracker_connect=True %}
+ {% elif tracker_results %}
+ <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+ {% for tracker_hit in tracker_results %}
+ {% include "anime/partials/_search_add_card.html" with tracker_hit=tracker_hit search_query=query %}
+ {% endfor %}
+ </div>
+ {% else %}
+ <div class="card-base p-12 text-center font-bold text-neo-ink/80 text-sm ">
+ Either every AniList match for this query is already in your library, AniList found no titles, or the tracker lookup failed.
+ </div>
+ {% endif %}
+ </section>
+ {% endif %}
 {% endblock %}

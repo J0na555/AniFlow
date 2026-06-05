@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from apps.productivity.services import get_watching_limit_state
 
-from .models import Anime, UserAnime
+from .models import Anime, UserAnime, UserAnimeProgressEvent
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +55,19 @@ def normalize_tracker_status(value: str | None) -> str:
     return normalized
 
 
+def log_progress_delta(user, anime: Anime, old_progress: int, new_progress: int) -> None:
+    delta = new_progress - old_progress
+    if delta <= 0:
+        return
+    UserAnimeProgressEvent.objects.create(user=user, anime=anime, delta=delta)
+
+
 def apply_progress_update(
     user_anime: UserAnime,
     progress: int,
     tracker_status: str | None = None,
 ) -> UserAnime:
+    old_progress = user_anime.progress
     status = normalize_tracker_status(tracker_status) or user_anime.status
     if progress > 0 and user_anime.status == "planning":
         status = "watching"
@@ -82,6 +90,49 @@ def apply_progress_update(
             "updated_at",
         ]
     )
+    log_progress_delta(user_anime.user, user_anime.anime, old_progress, user_anime.progress)
+    return user_anime
+
+
+def update_user_anime_status(user, *, anime_id: int, status: str) -> UserAnime:
+    """Apply a list status change with watching-limit enforcement."""
+    normalized = normalize_tracker_status(status)
+    if normalized not in VALID_USER_STATUSES:
+        raise ValueError(f"Invalid status: {status!r}")
+
+    user_anime = UserAnime.objects.select_related("anime").get(user=user, anime_id=anime_id)
+    prev = user_anime.status
+    old_progress = user_anime.progress
+
+    if normalized == "watching" and prev != "watching":
+        limit_state = get_watching_limit_state(user)
+        if limit_state.reached:
+            raise WatchingLimitReached(
+                "Watching limit reached. Override the limit before starting another title."
+            )
+
+    user_anime.status = normalized
+    today = timezone.localdate()
+    changed: set[str] = {"status", "updated_at"}
+
+    if normalized == "watching" and prev == "planning" and not user_anime.start_date:
+        user_anime.start_date = today
+        changed.add("start_date")
+
+    if normalized == "completed":
+        if user_anime.anime.episodes is not None:
+            user_anime.progress = user_anime.anime.episodes
+        changed.add("progress")
+        if not user_anime.completed_date:
+            user_anime.completed_date = today
+            changed.add("completed_date")
+    elif prev == "completed" and normalized != "completed":
+        if user_anime.completed_date is not None:
+            user_anime.completed_date = None
+            changed.add("completed_date")
+
+    user_anime.save(update_fields=sorted(changed))
+    log_progress_delta(user, user_anime.anime, old_progress, user_anime.progress)
     return user_anime
 
 
@@ -93,12 +144,7 @@ def _save_user_entry(
     progress: int | None = None,
     score: float | None = None,
 ) -> UserAnime:
-    """Push the entry to the user's tracker (best-effort) and upsert UserAnime.
-
-    A tracker failure (e.g. AniList 5xx) is logged but does not roll back the
-    local write; the next sync will reconcile the state.
-    """
-    # Lazy import to avoid the apps.tracker.services <-> apps.anime.services cycle.
+    """Push list entry to tracker (best-effort) and upsert ``UserAnime``."""
     from apps.tracker import services as tracker_services
 
     try:
@@ -140,13 +186,7 @@ def add_to_library(
     score: float | None = None,
     payload: dict[str, Any] | None = None,
 ) -> UserAnime:
-    """Add a tracker title to the user's library and sync it to the tracker.
-
-    `payload` should be the tracker media payload already fetched by the caller
-    (the search view caches it on the request). If omitted, we fall back to an
-    existing local ``Anime`` row keyed by ``tracker_id`` and raise if neither
-    is available.
-    """
+    """Add a tracker title to the user's library and mirror it on the tracker."""
     normalized = normalize_tracker_status(status)
     if normalized not in VALID_USER_STATUSES:
         raise ValueError(f"Invalid status: {status!r}")

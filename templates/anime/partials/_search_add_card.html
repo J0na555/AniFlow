@@ -1,180 +1,180 @@
 {% if needs_tracker_connect %}
-  <div class="card-base p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 glass opacity-95 border-accent/15">
-    <div class="flex items-center gap-5 min-w-0">
-      <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center border border-accent/20 flex-shrink-0">
-        <i data-lucide="link" class="w-7 h-7 text-accent opacity-70"></i>
-      </div>
-      <div class="min-w-0">
-        <p class="text-sm font-black text-white mb-1">Connect AniList to add titles</p>
-        <p class="text-xs text-muted font-medium leading-relaxed">
-          Link your AniList account to search AniFlow and sync new entries to your tracker list.
-        </p>
-      </div>
-    </div>
-    <a
-      href="{% url 'anilist_login' %}"
-      class="flex-shrink-0 inline-flex items-center justify-center gap-2 bg-accent/20 text-accent hover:bg-accent hover:text-background font-black px-6 py-3 rounded-xl text-xs uppercase tracking-widest border border-accent/30 transition-all whitespace-nowrap"
-    >
-      <i data-lucide="log-in" class="w-4 h-4"></i>
-      Connect AniList
-    </a>
-  </div>
+ <div class="card-base p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 bg-neo-muted">
+ <div class="flex items-center gap-5 min-w-0">
+ <div class="w-14 h-14 neo-icon-box flex-shrink-0 bg-neo-secondary flex-shrink-0">
+ <i data-lucide="link" class="w-7 h-7 text-accent opacity-70"></i>
+ </div>
+ <div class="min-w-0">
+ <p class="text-sm font-black mb-1">Connect AniList to add titles</p>
+ <p class="text-xs font-bold leading-relaxed">
+ Link your AniList account to search AniFlow and sync new entries to your tracker list.
+ </p>
+ </div>
+ </div>
+ <a
+ href="{% url 'anilist_login' %}"
+ class="flex-shrink-0 inline-flex items-center justify-center gap-2 neo-btn-primary flex-shrink-0 whitespace-nowrap"
+ >
+ <i data-lucide="log-in" class="w-4 h-4"></i>
+ Connect AniList
+ </a>
+ </div>
 {% elif added and entry %}
-  <div
-    id="add-card-{{ entry.anime.tracker_id }}"
-    class="card-base p-5 flex gap-6 group border-accent/35 premium-shadow animate-slide-up"
-  >
-    <div class="w-24 h-32 rounded-2xl overflow-hidden bg-white/5 flex-shrink-0 shadow-2xl">
-      {% if entry.anime.cover_image_url %}
-        <img
-          src="{{ entry.anime.cover_image_url }}"
-          alt="{{ entry.anime.title_english }}"
-          class="w-full h-full object-cover"
-        >
-      {% else %}
-        <div class="w-full h-full flex items-center justify-center">
-          <i data-lucide="image" class="w-10 h-10 text-muted"></i>
-        </div>
-      {% endif %}
-    </div>
-    <div class="flex flex-col justify-between min-w-0 flex-1">
-      <div>
-        <div class="flex items-center gap-2 mb-2">
-          <i data-lucide="check-circle" class="w-4 h-4 text-accent flex-shrink-0"></i>
-          <span class="text-[10px] font-black uppercase tracking-widest text-accent">In your library</span>
-        </div>
-        <h3 class="font-bold text-base line-clamp-2 mb-2 leading-tight">
-          {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
-        </h3>
-        <p class="text-xs text-muted font-bold uppercase tracking-widest">
-          {% if entry.anime.episodes %}
-            Episodes: {{ entry.anime.episodes }}
-          {% else %}
-            Episodes: ?
-          {% endif %}
-          {% if entry.anime.season_year %}
-            <span class="text-muted/60">&middot;</span> {{ entry.anime.season_year }}
-          {% endif %}
-        </p>
-      </div>
-      <div class="flex items-center gap-3 flex-wrap mt-4">
-        {% if entry.status != "completed" and entry.status != "dropped" %}
-          {% if entry.status == "watching" %}
-            <a
-              href="{% url 'anime_resume' entry.anime_id %}"
-              class="bg-accent/10 hover:bg-accent text-accent hover:text-background text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-accent/20"
-            >
-              <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
-              Resume
-            </a>
-          {% else %}
-            <a
-              href="{% url 'anime_play' entry.anime_id %}"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-white/10"
-            >
-              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-              Open
-            </a>
-          {% endif %}
-        {% else %}
-          <a
-            href="{% url 'anime_play' entry.anime_id %}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-white/10"
-          >
-            <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
-            Play
-          </a>
-        {% endif %}
-        <span class="text-[10px] text-muted font-black uppercase tracking-widest">{{ entry.get_status_display }}</span>
-      </div>
-    </div>
-  </div>
+ <div
+ id="add-card-{{ entry.anime.tracker_id }}"
+ class="card-base p-5 flex gap-6 group animate-slide-up"
+ >
+ <div class="w-24 h-32 border-4 border-black overflow-hidden flex-shrink-0 neo-shadow-sm bg-neo-white">
+ {% if entry.anime.cover_image_url %}
+ <img
+ src="{{ entry.anime.cover_image_url }}"
+ alt="{{ entry.anime.title_english }}"
+ class="w-full h-full object-cover"
+ >
+ {% else %}
+ <div class="w-full h-full flex items-center justify-center">
+ <i data-lucide="image" class="w-10 h-10 text-neo-ink"></i>
+ </div>
+ {% endif %}
+ </div>
+ <div class="flex flex-col justify-between min-w-0 flex-1">
+ <div>
+ <div class="flex items-center gap-2 mb-2">
+ <i data-lucide="check-circle" class="w-4 h-4 text-accent flex-shrink-0"></i>
+ <span class="text-[10px] font-black uppercase tracking-widest text-accent">In your library</span>
+ </div>
+ <h3 class="font-bold text-base line-clamp-2 mb-2 leading-tight">
+ {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
+ </h3>
+ <p class="text-xs text-neo-ink font-bold uppercase tracking-widest">
+ {% if entry.anime.episodes %}
+ Episodes: {{ entry.anime.episodes }}
+ {% else %}
+ Episodes: ?
+ {% endif %}
+ {% if entry.anime.season_year %}
+ <span class="text-neo-ink/60">&middot;</span> {{ entry.anime.season_year }}
+ {% endif %}
+ </p>
+ </div>
+ <div class="flex items-center gap-3 flex-wrap mt-4">
+ {% if entry.status != "completed" and entry.status != "dropped" %}
+ {% if entry.status == "watching" %}
+ <a
+ href="{% url 'anime_resume' entry.anime_id %}"
+ class="bg-accent/10 hover:bg-accent text-accent hover:text-background text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-accent/20"
+ >
+ <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+ Resume
+ </a>
+ {% else %}
+ <a
+ href="{% url 'anime_play' entry.anime_id %}"
+ target="_blank"
+ rel="noopener noreferrer"
+ class="neo-btn-ghost !text-xs !h-10 !px-4 text-neo-ink text-[10px] font-black uppercase tracking-widest px-4 py-2 "
+ >
+ <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+ Open
+ </a>
+ {% endif %}
+ {% else %}
+ <a
+ href="{% url 'anime_play' entry.anime_id %}"
+ target="_blank"
+ rel="noopener noreferrer"
+ class="neo-btn-ghost !text-xs !h-10 !px-4 text-neo-ink text-[10px] font-black uppercase tracking-widest px-4 py-2 "
+ >
+ <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+ Play
+ </a>
+ {% endif %}
+ <span class="text-[10px] text-neo-ink font-black uppercase tracking-widest">{{ entry.get_status_display }}</span>
+ </div>
+ </div>
+ </div>
 {% elif error and tracker_id %}
-  <div
-    id="add-card-{{ tracker_id }}"
-    class="card-base p-5 flex gap-6 border-red-500/30 bg-red-500/[0.04] animate-slide-up"
-  >
-    <div class="w-24 h-32 rounded-2xl overflow-hidden bg-red-500/10 flex-shrink-0 flex items-center justify-center border border-red-500/20">
-      <i data-lucide="alert-circle" class="w-10 h-10 text-red-500"></i>
-    </div>
-    <div class="flex flex-col justify-center min-w-0 flex-1 gap-3">
-      <p class="text-sm font-black text-white">Could not add title</p>
-      <p class="text-xs text-muted font-medium leading-relaxed">{{ error }}</p>
-      <p class="text-[10px] text-muted font-bold uppercase tracking-widest">
-        Try again from search or reconnect AniList.
-      </p>
-    </div>
-  </div>
+ <div
+ id="add-card-{{ tracker_id }}"
+ class="card-base p-5 flex gap-6 border-red-500/30 bg-red-500/[0.04] animate-slide-up"
+ >
+ <div class="w-24 h-32 border-4 border-black overflow-hidden bg-neo-accent flex-shrink-0 flex items-center justify-center border-4 border-black">
+ <i data-lucide="alert-circle" class="w-10 h-10 text-red-500"></i>
+ </div>
+ <div class="flex flex-col justify-center min-w-0 flex-1 gap-3">
+ <p class="text-sm font-black text-neo-ink">Could not add title</p>
+ <p class="text-xs font-bold leading-relaxed">{{ error }}</p>
+ <p class="text-[10px] text-neo-ink font-bold uppercase tracking-widest">
+ Try again from search or reconnect AniList.
+ </p>
+ </div>
+ </div>
 {% elif tracker_hit %}
-  <div id="add-card-{{ tracker_hit.tracker_id }}" class="card-base p-5 flex gap-6 group hover:border-accent/30 premium-shadow animate-slide-up">
-    <div class="w-24 h-32 rounded-2xl overflow-hidden bg-white/5 flex-shrink-0 shadow-2xl">
-      {% if tracker_hit.cover_image_url %}
-        <img
-          src="{{ tracker_hit.cover_image_url }}"
-          alt="{{ tracker_hit.title_english }}"
-          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-        >
-      {% else %}
-        <div class="w-full h-full flex items-center justify-center">
-          <i data-lucide="image" class="w-10 h-10 text-muted"></i>
-        </div>
-      {% endif %}
-    </div>
-    <div class="flex flex-col justify-between min-w-0 flex-1">
-      <div>
-        <h3 class="font-bold text-base line-clamp-2 mb-2 group-hover:text-accent transition-colors leading-tight">
-          {% firstof tracker_hit.title_english tracker_hit.title_romaji tracker_hit.title_native "Untitled" %}
-        </h3>
-        <p class="text-xs text-muted font-bold uppercase tracking-widest">
-          {% if tracker_hit.episodes %}
-            Episodes: {{ tracker_hit.episodes }}
-          {% else %}
-            Episodes: ?
-          {% endif %}
-          {% if tracker_hit.season_year %}
-            <span class="text-muted/60">&middot;</span> {{ tracker_hit.season_year }}
-          {% endif %}
-        </p>
-      </div>
-      <div class="mt-4 pt-4 border-t border-white/10">
-        <form
-          method="post"
-          action="{% url 'anime_add_to_library' %}"
-          class="flex flex-col sm:flex-row sm:items-end gap-4"
-          hx-post="{% url 'anime_add_to_library' %}"
-          hx-target="#add-card-{{ tracker_hit.tracker_id }}"
-          hx-swap="outerHTML"
-        >
-          {% csrf_token %}
-          <input type="hidden" name="tracker_id" value="{{ tracker_hit.tracker_id }}" />
-          <input type="hidden" name="q" value="{{ search_query|default:'' }}" />
-          <label class="flex flex-col gap-2 flex-1 min-w-0">
-            <span class="text-[10px] font-black uppercase tracking-widest text-muted">List status</span>
-            <select
-              name="status"
-              class="w-full bg-white/[0.03] border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-white focus:outline-none focus:border-accent/50 transition-colors appearance-none cursor-pointer"
-            >
-              <option value="planning" selected>Planning</option>
-              <option value="watching">Watching</option>
-              <option value="completed">Completed</option>
-              <option value="paused">Paused</option>
-              <option value="dropped">Dropped</option>
-              <option value="repeating">Repeating</option>
-            </select>
-          </label>
-          <button
-            type="submit"
-            class="flex-shrink-0 inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-background font-black uppercase tracking-widest text-[10px] px-6 py-3 rounded-xl transition-all hover:scale-[1.02] active:scale-95 shadow-lg sm:self-auto"
-          >
-            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-            Add
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
+ <div id="add-card-{{ tracker_hit.tracker_id }}" class="card-base p-5 flex gap-6 group hover:border-accent/30 animate-slide-up">
+ <div class="w-24 h-32 border-4 border-black overflow-hidden flex-shrink-0 neo-shadow-sm bg-neo-white">
+ {% if tracker_hit.cover_image_url %}
+ <img
+ src="{{ tracker_hit.cover_image_url }}"
+ alt="{{ tracker_hit.title_english }}"
+ class="w-full h-full object-cover object-cover"
+ >
+ {% else %}
+ <div class="w-full h-full flex items-center justify-center">
+ <i data-lucide="image" class="w-10 h-10 text-neo-ink"></i>
+ </div>
+ {% endif %}
+ </div>
+ <div class="flex flex-col justify-between min-w-0 flex-1">
+ <div>
+ <h3 class="font-bold text-base line-clamp-2 mb-2 group-hover:text-accent transition-colors leading-tight">
+ {% firstof tracker_hit.title_english tracker_hit.title_romaji tracker_hit.title_native "Untitled" %}
+ </h3>
+ <p class="text-xs text-neo-ink font-bold uppercase tracking-widest">
+ {% if tracker_hit.episodes %}
+ Episodes: {{ tracker_hit.episodes }}
+ {% else %}
+ Episodes: ?
+ {% endif %}
+ {% if tracker_hit.season_year %}
+ <span class="text-neo-ink/60">&middot;</span> {{ tracker_hit.season_year }}
+ {% endif %}
+ </p>
+ </div>
+ <div class="mt-4 pt-4 border-t border-white/10">
+ <form
+ method="post"
+ action="{% url 'anime_add_to_library' %}"
+ class="flex flex-col sm:flex-row sm:items-end gap-4"
+ hx-post="{% url 'anime_add_to_library' %}"
+ hx-target="#add-card-{{ tracker_hit.tracker_id }}"
+ hx-swap="outerHTML"
+ >
+ {% csrf_token %}
+ <input type="hidden" name="tracker_id" value="{{ tracker_hit.tracker_id }}" />
+ <input type="hidden" name="q" value="{{ search_query|default:'' }}" />
+ <label class="flex flex-col gap-2 flex-1 min-w-0">
+ <span class="text-[10px] font-black uppercase tracking-widest text-neo-ink">List status</span>
+ <select
+ name="status"
+ class="w-full neo-input !h-12 !text-sm py-2.5 px-3 text-xs font-bold text-neo-ink focus:outline-none focus:border-accent/50 transition-colors appearance-none cursor-pointer"
+ >
+ <option value="planning" selected>Planning</option>
+ <option value="watching">Watching</option>
+ <option value="completed">Completed</option>
+ <option value="paused">Paused</option>
+ <option value="dropped">Dropped</option>
+ <option value="repeating">Repeating</option>
+ </select>
+ </label>
+ <button
+ type="submit"
+ class="flex-shrink-0 inline-flex items-center justify-center gap-2 neo-btn-primary flex-shrink-0 !text-xs"
+ >
+ <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+ Add
+ </button>
+ </form>
+ </div>
+ </div>
+ </div>
 {% endif %}

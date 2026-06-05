@@ -1,11 +1,11 @@
 {% load static %}
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}AniFlow{% endblock %}</title>
-    <meta name="theme-color" content="#ea4497" />
+    <meta name="theme-color" content="#FFFDF5" />
     <link rel="icon" type="image/x-icon" href="{% static 'anime/branding/favicon.ico' %}?v=3" />
     <link rel="shortcut icon" href="{% static 'anime/branding/favicon.ico' %}?v=3" />
     <link rel="apple-touch-icon" href="{% static 'anime/branding/logo_1.png' %}?v=3" />
@@ -14,29 +14,32 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
-        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Inter', 'sans-serif'],
+              sans: ['Space Grotesk', 'sans-serif'],
             },
             colors: {
-              background: '#050505',
-              sidebar: '#080808',
-              card: '#0f0f0f',
-              accent: '#ea4497',
-              'accent-hover': '#dd1864',
-              'accent-active': '#9d143f',
-              border: '#1a1a1a',
-              muted: '#71717a',
+              neo: {
+                bg: '#FFFDF5',
+                ink: '#000000',
+                accent: '#FF6B6B',
+                secondary: '#FFD93D',
+                muted: '#C4B5FD',
+                white: '#FFFFFF',
+              },
+              background: '#FFFDF5',
+              accent: '#FF6B6B',
+              'accent-hover': '#e85555',
+              'accent-active': '#d44a4a',
+              border: '#000000',
             },
             animation: {
-              'fade-in': 'fadeIn 0.5s ease-out forwards',
-              'slide-up': 'slideUp 0.5s ease-out forwards',
-              'scale-in': 'scaleIn 0.3s ease-out forwards',
+              'fade-in': 'fadeIn 0.2s ease-out forwards',
+              'slide-up': 'slideUp 0.2s ease-out forwards',
             },
             keyframes: {
               fadeIn: {
@@ -44,12 +47,8 @@
                 '100%': { opacity: '1' },
               },
               slideUp: {
-                '0%': { transform: 'translateY(10px)', opacity: '0' },
+                '0%': { transform: 'translateY(8px)', opacity: '0' },
                 '100%': { transform: 'translateY(0)', opacity: '1' },
-              },
-              scaleIn: {
-                '0%': { transform: 'scale(0.95)', opacity: '0' },
-                '100%': { transform: 'scale(1)', opacity: '1' },
               },
             },
           }
@@ -62,149 +61,401 @@
           scroll-behavior: smooth;
         }
         body {
-          @apply bg-background text-gray-200 antialiased font-sans;
+          @apply bg-neo-bg text-neo-ink antialiased font-sans font-bold;
+          background-image:
+            linear-gradient(to right, rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0, 0, 0, 0.06) 1px, transparent 1px);
+          background-size: 40px 40px;
         }
-        /* Custom Scrollbar */
         ::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
+          width: 8px;
+          height: 8px;
         }
         ::-webkit-scrollbar-track {
-          @apply bg-transparent;
+          @apply bg-neo-bg;
         }
         ::-webkit-scrollbar-thumb {
-          @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
+          @apply bg-neo-ink border-2 border-neo-bg;
+        }
+        svg.lucide,
+        [data-lucide] + svg {
+          stroke-width: 3;
         }
       }
       @layer components {
-        .nav-item {
-          @apply flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-muted hover:bg-accent/10 hover:text-accent active:bg-accent/15 active:text-accent;
+        .neo-shadow-sm { box-shadow: 4px 4px 0 0 #000; }
+        .neo-shadow-md { box-shadow: 8px 8px 0 0 #000; }
+        .neo-shadow-lg { box-shadow: 12px 12px 0 0 #000; }
+        .neo-shadow-xl { box-shadow: 16px 16px 0 0 #000; }
+
+        .neo-card {
+          @apply bg-neo-white border-4 border-black rounded-none overflow-hidden transition-all duration-200;
+          box-shadow: 8px 8px 0 0 #000;
         }
-        .nav-item.active {
-          @apply bg-accent/10 text-accent font-semibold;
-        }
-        .sidebar-section-title {
-          @apply px-4 text-[10px] font-bold text-muted/50 uppercase tracking-[0.2em] mb-3 mt-8;
+        .neo-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 12px 12px 0 0 #000;
         }
         .card-base {
-          @apply bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300;
+          @apply neo-card;
         }
-        .glass {
-          @apply bg-white/[0.03] backdrop-blur-xl border border-white/10;
+        .neo-card-header {
+          @apply border-b-4 border-black px-4 py-3 font-black uppercase tracking-widest text-sm;
         }
-        .premium-shadow {
-          box-shadow: 0 0 40px -10px rgba(0, 0, 0, 0.5);
+        .neo-card-header-muted { @apply neo-card-header bg-neo-muted; }
+        .neo-card-header-secondary { @apply neo-card-header bg-neo-secondary; }
+
+        .neo-btn {
+          @apply inline-flex items-center justify-center gap-2 border-4 border-black font-bold text-sm uppercase tracking-wide transition-all duration-100 rounded-none px-6 h-12;
+          box-shadow: 4px 4px 0 0 #000;
         }
-        .accent-glow {
-          box-shadow: 0 0 24px -6px rgba(234, 68, 151, 0.45);
+        .neo-btn:active {
+          transform: translate(2px, 2px);
+          box-shadow: none;
         }
-        .htmx-indicator {
-          display: none;
+        .neo-btn-primary {
+          @apply neo-btn bg-neo-accent text-neo-ink;
         }
-        .htmx-request .htmx-indicator {
-          display: block;
+        .neo-btn-primary:hover { @apply bg-accent-hover; }
+        .neo-btn-secondary {
+          @apply neo-btn bg-neo-secondary text-neo-ink;
         }
-        .htmx-request.htmx-indicator {
-          display: block;
+        .neo-btn-secondary:hover { filter: brightness(0.95); }
+        .neo-btn-ghost {
+          @apply neo-btn bg-neo-white text-neo-ink;
+        }
+        .neo-btn-ghost:hover { @apply bg-neo-secondary; }
+
+        .neo-input {
+          @apply w-full bg-neo-white border-4 border-black rounded-none font-bold text-lg text-neo-ink placeholder:text-black/40 h-14 px-4 transition-all duration-100;
+        }
+        .neo-input:focus,
+        .neo-input:focus-visible {
+          @apply outline-none ring-0 bg-neo-secondary;
+          box-shadow: 4px 4px 0 0 #000;
+        }
+
+        .neo-nav-item {
+          @apply flex items-center gap-3 px-4 py-3 border-4 border-transparent font-bold text-sm uppercase tracking-wide text-neo-ink transition-all duration-100 rounded-none;
+        }
+        .neo-nav-item:hover {
+          @apply border-black bg-neo-secondary;
+          box-shadow: 4px 4px 0 0 #000;
+        }
+        .neo-nav-item.active {
+          @apply border-black bg-neo-accent text-neo-ink;
+          box-shadow: 4px 4px 0 0 #000;
+        }
+        .nav-item { @apply neo-nav-item; }
+        .nav-item.active {
+          @apply border-black bg-neo-accent text-neo-ink;
+          box-shadow: 4px 4px 0 0 #000;
+        }
+
+        .sidebar-section-title {
+          @apply px-4 text-xs font-black text-neo-ink uppercase tracking-[0.2em] mb-3 mt-6;
+        }
+
+        .neo-badge {
+          @apply inline-flex items-center gap-1 border-4 border-black font-black text-xs uppercase tracking-widest px-3 py-1;
+          box-shadow: 4px 4px 0 0 #000;
+        }
+        .neo-badge-accent { @apply neo-badge bg-neo-accent; }
+        .neo-badge-secondary { @apply neo-badge bg-neo-secondary; }
+        .neo-badge-muted { @apply neo-badge bg-neo-muted; }
+
+        .neo-section-title {
+          @apply flex items-center gap-3 mb-6;
+        }
+        .neo-section-title-bar {
+          @apply w-2 h-8 bg-neo-accent border-2 border-black -rotate-2;
+          box-shadow: 3px 3px 0 0 #000;
+        }
+        .neo-section-title-text {
+          @apply text-sm font-black uppercase tracking-[0.2em] text-neo-ink;
+        }
+
+        .neo-icon-box {
+          @apply flex items-center justify-center border-4 border-black bg-neo-accent p-3;
+          box-shadow: 4px 4px 0 0 #000;
+        }
+
+        .neo-text-stroke {
+          -webkit-text-stroke: 2px #000;
+          color: transparent;
+        }
+
+        .neo-link {
+          @apply font-bold text-sm uppercase tracking-wide text-neo-ink border-4 border-transparent px-2 py-1 transition-all duration-100 inline-flex items-center gap-2;
+        }
+        .neo-link:hover {
+          @apply border-black bg-neo-secondary;
+          box-shadow: 4px 4px 0 0 #000;
+        }
+
+        .htmx-indicator { display: none; }
+        .htmx-request .htmx-indicator { display: block; }
+        .htmx-request.htmx-indicator { display: block; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .neo-card:hover,
+        .neo-btn:active,
+        .neo-nav-item:hover {
+          transform: none;
+        }
+        .animate-pulse,
+        .animate-bounce,
+        .animate-spin {
+          animation: none !important;
+        }
+        * {
+          transition-duration: 0.01ms !important;
         }
       }
     </style>
   </head>
   <body class="flex h-screen overflow-hidden">
-    <!-- Sidebar -->
-    <aside class="w-72 bg-sidebar border-r border-border flex flex-col flex-shrink-0 z-20">
-      <a href="{% url 'dashboard' %}" class="p-6 flex items-center justify-center border-b border-border/70">
-        <img src="{% static 'anime/branding/logo_1.png' %}" alt="AniFlow" class="h-24 w-auto rounded-2xl accent-glow object-contain" />
+    <!-- Mobile overlay -->
+    <div id="mobile-nav-backdrop" class="fixed inset-0 bg-black/40 z-40 hidden lg:hidden" aria-hidden="true"></div>
+
+    <!-- Mobile drawer -->
+    <aside
+      id="mobile-nav-drawer"
+      class="fixed top-0 left-0 h-full w-72 max-w-[85vw] bg-neo-secondary border-r-4 border-black z-50 flex flex-col -translate-x-full transition-transform duration-200 ease-out lg:hidden"
+      aria-label="Mobile navigation"
+      aria-hidden="true"
+    >
+      <div class="p-4 border-b-4 border-black flex items-center justify-between">
+        <a href="{% url 'dashboard' %}" class="border-4 border-black bg-neo-white p-2 neo-shadow-sm">
+          <img src="{% static 'anime/branding/logo_1.png' %}" alt="AniFlow" class="h-12 w-auto object-contain" />
+        </a>
+        <button type="button" id="mobile-nav-close" class="neo-btn-ghost w-12 h-12 p-0" aria-label="Close menu">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      <nav class="flex-1 px-3 py-4 overflow-y-auto space-y-2">
+        <div class="sidebar-section-title">Library</div>
+        <a href="{% url 'dashboard' %}" class="neo-nav-item w-full {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Dashboard</span>
+        </a>
+        <a href="{% url 'watching_list' %}" class="neo-nav-item w-full {% if request.resolver_match.url_name == 'watching_list' %}active{% endif %}">
+          <i data-lucide="play-circle" class="w-5 h-5"></i><span>Watching</span>
+        </a>
+        <a href="{% url 'weekly_releases' %}" class="neo-nav-item w-full {% if request.resolver_match.url_name == 'weekly_releases' %}active{% endif %}">
+          <i data-lucide="calendar" class="w-5 h-5"></i><span>Weekly Releases</span>
+        </a>
+        <a href="{% url 'completed_list' %}" class="neo-nav-item w-full {% if request.resolver_match.url_name == 'completed_list' %}active{% endif %}">
+          <i data-lucide="check-circle" class="w-5 h-5"></i><span>Completed</span>
+        </a>
+        <a href="{% url 'recommendations' %}" class="neo-nav-item w-full {% if request.resolver_match.url_name == 'recommendations' %}active{% endif %}">
+          <i data-lucide="sparkles" class="w-5 h-5"></i><span>Recommendations</span>
+        </a>
+      </nav>
+
+      <div class="p-4 border-t-4 border-black space-y-2">
+        {% if user.is_authenticated %}
+        <a href="{% url 'user_settings' %}" class="neo-nav-item w-full {% if request.resolver_match.url_name == 'user_settings' %}active{% endif %}">
+          <i data-lucide="settings" class="w-5 h-5"></i><span>Settings</span>
+        </a>
+        <form method="post" action="{% url 'logout' %}" class="w-full">
+          {% csrf_token %}
+          <button type="submit" class="neo-nav-item w-full text-left">
+            <i data-lucide="log-out" class="w-5 h-5"></i><span>Disconnect AniList</span>
+          </button>
+        </form>
+        {% if not user.tracker_access_token %}
+        <a href="{% url 'anilist_login' %}" class="neo-nav-item w-full">
+          <i data-lucide="link" class="w-5 h-5"></i><span>Reconnect AniList</span>
+        </a>
+        {% endif %}
+
+        <div class="pt-4 flex items-center gap-3 px-2">
+          <div class="w-12 h-12 border-4 border-black bg-neo-accent flex items-center justify-center font-black text-lg neo-shadow-sm">
+            {{ user.username|slice:":1"|upper }}
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-black truncate">{{ user.username }}</span>
+            {% if user.tracker_access_token %}
+            <span class="text-[10px] font-black uppercase tracking-wider">AniList Connected</span>
+            {% else %}
+            <span class="text-[10px] font-black uppercase tracking-wider text-neo-ink/70">Not connected</span>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <a href="{% url 'anilist_login' %}" class="neo-nav-item w-full">
+          <i data-lucide="link" class="w-5 h-5"></i><span>Connect AniList</span>
+        </a>
+
+        <div class="pt-4 flex items-center gap-3 px-2">
+          <div class="w-12 h-12 border-4 border-black bg-neo-accent flex items-center justify-center font-black text-lg neo-shadow-sm">
+            G
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-black truncate">Guest</span>
+            <span class="text-[10px] font-black uppercase tracking-wider text-neo-ink/70">Not connected</span>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </aside>
+
+    <!-- Desktop sidebar -->
+    <aside class="hidden lg:flex w-72 bg-neo-secondary border-r-4 border-black flex-col flex-shrink-0 z-20">
+      <a href="{% url 'dashboard' %}" class="p-6 flex items-center justify-center border-b-4 border-black">
+        <div class="border-4 border-black bg-neo-white p-3 neo-shadow-md -rotate-1">
+          <img src="{% static 'anime/branding/logo_1.png' %}" alt="AniFlow" class="h-20 w-auto object-contain" />
+        </div>
       </a>
 
-      <nav class="flex-1 px-4 overflow-y-auto space-y-1">
+      <nav class="flex-1 px-3 overflow-y-auto space-y-1 py-2">
         <div class="sidebar-section-title">Library</div>
-        <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <a href="{% url 'dashboard' %}" class="neo-nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
           <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
           <span>Dashboard</span>
         </a>
-        <a href="{% url 'watching_list' %}" class="nav-item {% if request.resolver_match.url_name == 'watching_list' %}active{% endif %}">
+        <a href="{% url 'watching_list' %}" class="neo-nav-item {% if request.resolver_match.url_name == 'watching_list' %}active{% endif %}">
           <i data-lucide="play-circle" class="w-5 h-5"></i>
           <span>Watching</span>
         </a>
-        <a href="{% url 'weekly_releases' %}" class="nav-item {% if request.resolver_match.url_name == 'weekly_releases' %}active{% endif %}">
+        <a href="{% url 'weekly_releases' %}" class="neo-nav-item {% if request.resolver_match.url_name == 'weekly_releases' %}active{% endif %}">
           <i data-lucide="calendar" class="w-5 h-5"></i>
           <span>Weekly Releases</span>
         </a>
-        <a href="{% url 'completed_list' %}" class="nav-item {% if request.resolver_match.url_name == 'completed_list' %}active{% endif %}">
+        <a href="{% url 'completed_list' %}" class="neo-nav-item {% if request.resolver_match.url_name == 'completed_list' %}active{% endif %}">
           <i data-lucide="check-circle" class="w-5 h-5"></i>
           <span>Completed</span>
         </a>
-        <a href="{% url 'recommendations' %}" class="nav-item {% if request.resolver_match.url_name == 'recommendations' %}active{% endif %}">
+        <a href="{% url 'recommendations' %}" class="neo-nav-item {% if request.resolver_match.url_name == 'recommendations' %}active{% endif %}">
           <i data-lucide="sparkles" class="w-5 h-5"></i>
           <span>Recommendations</span>
         </a>
       </nav>
 
-      <div class="p-6 border-t border-border space-y-2">
-        <a href="#" class="nav-item group">
-          <i data-lucide="settings" class="w-5 h-5 group-hover:rotate-45 transition-transform duration-500"></i>
+      <div class="p-4 border-t-4 border-black space-y-2">
+        {% if user.is_authenticated %}
+        <a href="{% url 'user_settings' %}" class="neo-nav-item {% if request.resolver_match.url_name == 'user_settings' %}active{% endif %}">
+          <i data-lucide="settings" class="w-5 h-5"></i>
           <span>Settings</span>
         </a>
         <form method="post" action="{% url 'logout' %}" class="w-full">
           {% csrf_token %}
-          <button type="submit" class="nav-item w-full text-left group">
-            <i data-lucide="log-out" class="w-5 h-5 group-hover:-translate-x-1 transition-transform"></i>
+          <button type="submit" class="neo-nav-item w-full text-left">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
             <span>Disconnect AniList</span>
           </button>
         </form>
-        
-        <div class="pt-6 flex items-center gap-3 px-2">
-          <div class="w-11 h-11 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold text-lg">
-            {% if user.is_authenticated %}
-              {{ user.username|slice:":1"|upper }}
-            {% else %}
-              A
-            {% endif %}
+        {% if not user.tracker_access_token %}
+        <a href="{% url 'anilist_login' %}" class="neo-nav-item w-full">
+          <i data-lucide="link" class="w-5 h-5"></i>
+          <span>Reconnect AniList</span>
+        </a>
+        {% endif %}
+
+        <div class="pt-4 flex items-center gap-3 px-2">
+          <div class="w-12 h-12 border-4 border-black bg-neo-accent flex items-center justify-center font-black text-lg neo-shadow-sm">
+            {{ user.username|slice:":1"|upper }}
           </div>
           <div class="flex flex-col min-w-0">
-            <span class="text-sm font-bold truncate">{% if user.is_authenticated %}{{ user.username }}{% else %}AnimeWatcher{% endif %}</span>
-            <div class="flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
-              <span class="text-[10px] text-muted font-bold uppercase tracking-wider">AniList Connected</span>
-            </div>
+            <span class="text-sm font-black truncate">{{ user.username }}</span>
+            {% if user.tracker_access_token %}
+            <span class="text-[10px] font-black uppercase tracking-wider">AniList Connected</span>
+            {% else %}
+            <span class="text-[10px] font-black uppercase tracking-wider text-neo-ink/70">Not connected</span>
+            {% endif %}
           </div>
         </div>
+        {% else %}
+        <a href="{% url 'anilist_login' %}" class="neo-nav-item w-full">
+          <i data-lucide="link" class="w-5 h-5"></i>
+          <span>Connect AniList</span>
+        </a>
+
+        <div class="pt-4 flex items-center gap-3 px-2">
+          <div class="w-12 h-12 border-4 border-black bg-neo-accent flex items-center justify-center font-black text-lg neo-shadow-sm">
+            G
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-black truncate">Guest</span>
+            <span class="text-[10px] font-black uppercase tracking-wider text-neo-ink/70">Not connected</span>
+          </div>
+        </div>
+        {% endif %}
       </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-      <!-- Global Loading Bar -->
-      <div class="htmx-indicator absolute top-0 left-0 right-0 h-1 bg-accent z-50 animate-pulse"></div>
-      
-      <!-- Top Bar -->
-      <header class="h-20 border-b border-border flex items-center justify-between px-10 bg-background/80 backdrop-blur-xl z-10">
-        <div class="flex-1 max-w-2xl">
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-neo-bg">
+      <div class="htmx-indicator absolute top-0 left-0 right-0 h-1.5 bg-neo-secondary border-b-4 border-black z-50"></div>
+
+      <header class="min-h-20 border-b-4 border-black flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-10 bg-neo-bg z-10 flex-shrink-0">
+        <button
+          type="button"
+          id="mobile-nav-open"
+          class="neo-btn-ghost w-12 h-12 p-0 flex-shrink-0 lg:hidden"
+          aria-label="Open menu"
+          aria-expanded="false"
+          aria-controls="mobile-nav-drawer"
+        >
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+        <div class="flex-1 min-w-0 max-w-2xl">
           {% block top_bar_search %}{% endblock %}
         </div>
-        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-3 sm:gap-6 flex-shrink-0">
           {% block top_bar_actions %}{% endblock %}
         </div>
       </header>
 
-      <!-- Content Area -->
-      <div class="flex-1 overflow-y-auto p-10 scroll-smooth">
-        <div class="max-w-[1600px] mx-auto animate-fade-in">
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 scroll-smooth">
+        <div class="max-w-7xl mx-auto animate-fade-in">
           {% block content %}{% endblock %}
         </div>
       </div>
     </main>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed bottom-8 right-8 z-50 flex flex-col gap-3"></div>
+    <div id="toast-container" class="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 flex flex-col gap-3 max-w-[calc(100vw-2rem)]"></div>
 
     <script>
       lucide.createIcons();
-      // Re-initialize icons after HTMX swaps
+
       document.body.addEventListener('htmx:afterSwap', function() {
         lucide.createIcons();
       });
+
+      (function() {
+        var drawer = document.getElementById('mobile-nav-drawer');
+        var backdrop = document.getElementById('mobile-nav-backdrop');
+        var openBtn = document.getElementById('mobile-nav-open');
+        var closeBtn = document.getElementById('mobile-nav-close');
+
+        function setOpen(open) {
+          if (!drawer || !backdrop || !openBtn) return;
+          openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+          if (open) {
+            drawer.classList.remove('-translate-x-full');
+            backdrop.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+          } else {
+            drawer.classList.add('-translate-x-full');
+            backdrop.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+          }
+        }
+
+        if (openBtn) openBtn.addEventListener('click', function() { setOpen(true); });
+        if (closeBtn) closeBtn.addEventListener('click', function() { setOpen(false); });
+        if (backdrop) backdrop.addEventListener('click', function() { setOpen(false); });
+        if (drawer) {
+          drawer.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', function() { setOpen(false); });
+          });
+        }
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') setOpen(false);
+        });
+      })();
     </script>
   </body>
 </html>

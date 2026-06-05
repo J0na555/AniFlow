@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-import logging
+from urllib.parse import urlparse
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.db import connection
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 
 from apps.anime.models import Anime, UserAnime
-from apps.anime.services import WatchingLimitReached
 from apps.anime.services import add_to_library
-from apps.anime.services import apply_progress_update
-from apps.anime.services import normalize_tracker_status
+from apps.anime.services import apply_progress_update, normalize_tracker_status
+from apps.anime.services import update_user_anime_status
+from apps.anime.services import WatchingLimitReached
 from apps.productivity.services import enable_watching_limit_override
 from apps.productivity.services import get_productivity_stats
 from apps.productivity.services import get_watching_limit_state
@@ -28,8 +28,6 @@ from apps.streaming.sources import get_adapter_for_source
 from apps.tracker.services import search_anime as tracker_search_anime
 from apps.tracker.services import update_progress as tracker_update_progress
 from apps.tracker.services import sync_user_list
-
-logger = logging.getLogger(__name__)
 
 
 def _build_dashboard_context(
@@ -56,6 +54,7 @@ def _build_dashboard_context(
         "watching_limit_error": watching_limit_error,
         "recommendations": get_recommendations(user, limit=6),
         "weekly_releases": get_weekly_releases(user, limit=6),
+        "library_status_choices": UserAnime.STATUS_CHOICES,
     }
     if oob:
         context["oob"] = True
@@ -171,6 +170,73 @@ def update_progress(request, anime_id: int):
     return redirect("dashboard")
 
 
+def _dashboard_referer_path(request) -> bool:
+    """True when the HX Referer is the root dashboard (path ``/``)."""
+    referer = request.META.get("HTTP_REFERER") or ""
+    if not referer:
+        return True
+    path = urlparse(referer).path.rstrip("/")
+    return path == ""
+
+
+def _append_toast_oob(response: HttpResponse, request, *, toast_id: str, message: str) -> HttpResponse:
+    toast_html = render(
+        request,
+        "partials/toast.html",
+        {"id": toast_id, "message": message, "type": "success"},
+    ).content.decode("utf-8")
+    response.content += (
+        f'<div id="toast-container" hx-swap-oob="beforeend">{toast_html}</div>'.encode("utf-8")
+    )
+    return response
+
+
+@login_required
+@require_POST
+def update_status(request, anime_id: int):
+    raw_status = (request.POST.get("status") or "").strip().lower()
+    if not raw_status:
+        return HttpResponseBadRequest("Missing status.")
+
+    try:
+        update_user_anime_status(request.user, anime_id=anime_id, status=raw_status)
+    except ValueError:
+        return HttpResponseBadRequest("Invalid status.")
+    except WatchingLimitReached as exc:
+        if request.headers.get("HX-Request") != "true":
+            return HttpResponseBadRequest(str(exc))
+        if _dashboard_referer_path(request):
+            context = _build_dashboard_context(
+                request.user,
+                oob=True,
+                watching_limit_error=str(exc),
+            )
+            return render(request, "anime/partials/dashboard_sections.html", context)
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = request.META.get("HTTP_REFERER") or reverse("dashboard")
+        return response
+    except UserAnime.DoesNotExist:
+        return HttpResponseNotFound("Entry not found.")
+
+    next_url = request.META.get("HTTP_REFERER") or reverse("dashboard")
+
+    if request.headers.get("HX-Request") == "true":
+        if not _dashboard_referer_path(request):
+            response = HttpResponse(status=200)
+            response["HX-Redirect"] = next_url
+            return response
+        context = _build_dashboard_context(request.user, oob=True)
+        response = render(request, "anime/partials/dashboard_sections.html", context)
+        return _append_toast_oob(
+            response,
+            request,
+            toast_id="status-updated",
+            message="List status updated.",
+        )
+
+    return redirect(next_url)
+
+
 @login_required
 @require_POST
 def sync_list(request):
@@ -243,50 +309,80 @@ def confirm_streaming_mapping(request, anime_id: int, source_id: int):
     return render(request, "anime/confirm_mapping.html", context)
 
 
-def _fetch_search_tracker_results(user, query: str) -> list[dict]:
-    """Fetch AniList search hits the user doesn't already own.
-
-    Skips the network call entirely for anonymous users or users without an
-    AniList token (the template renders a "Connect AniList" CTA instead).
-    Any tracker error degrades to an empty list so the local search results
-    still render.
-    """
-    if not query:
-        return []
-    if not getattr(user, "is_authenticated", False):
-        return []
-    if not getattr(user, "tracker_access_token", ""):
+def _tracker_hits_not_in_library(user, query: str) -> list[dict]:
+    """AniList search hits excluding titles already on the user's list."""
+    if not query.strip():
         return []
     try:
         hits = tracker_search_anime(user, query)
     except Exception:
-        logger.warning(
-            "Tracker search failed for user=%s query=%r",
-            getattr(user, "pk", None),
-            query,
-            exc_info=True,
-        )
         return []
 
     owned_keys = {
-        (item["anime__tracker_type"], item["anime__tracker_id"])
-        for item in UserAnime.objects.filter(user=user).values(
-            "anime__tracker_type", "anime__tracker_id"
-        )
+        (e.anime.tracker_type, str(e.anime.tracker_id))
+        for e in UserAnime.objects.filter(user=user).select_related("anime")
     }
-    tracker_results: list[dict] = []
+    results: list[dict] = []
     seen: set[tuple[str, str]] = set()
     for hit in hits:
-        tracker_type = hit.get("tracker_type") or ""
-        tracker_id = hit.get("tracker_id") or ""
-        if not tracker_type or not tracker_id:
+        tt = hit.get("tracker_type") or ""
+        tid = str(hit.get("tracker_id") or "")
+        if not tt or not tid:
             continue
-        key = (tracker_type, tracker_id)
+        key = (tt, tid)
         if key in owned_keys or key in seen:
             continue
         seen.add(key)
-        tracker_results.append(hit)
-    return tracker_results
+        results.append(hit)
+    return results
+
+
+@login_required
+@require_POST
+def add_to_library_view(request):
+    """HTMX: add an AniList hit from search (payload resolved via optional ``q``)."""
+    if not getattr(request.user, "tracker_access_token", ""):
+        return render(
+            request,
+            "anime/partials/_search_add_card.html",
+            {"needs_tracker_connect": True},
+        )
+
+    tracker_id = (request.POST.get("tracker_id") or "").strip()
+    status = (request.POST.get("status") or "").strip().lower()
+    q = (request.POST.get("q") or "").strip()
+
+    if not tracker_id or not status:
+        return HttpResponseBadRequest("Missing tracker_id or status.")
+
+    payload: dict | None = None
+    if q:
+        for hit in tracker_search_anime(request.user, q):
+            if str(hit.get("tracker_id")) == tracker_id:
+                payload = hit
+                break
+
+    template_ctx: dict = {"tracker_id": tracker_id, "search_query": q}
+
+    try:
+        entry = add_to_library(
+            request.user,
+            tracker_id=tracker_id,
+            status=status,
+            payload=payload,
+        )
+    except WatchingLimitReached as exc:
+        template_ctx["error"] = str(exc)
+        return render(request, "anime/partials/_search_add_card.html", template_ctx)
+    except ValueError as exc:
+        template_ctx["error"] = str(exc)
+        return render(request, "anime/partials/_search_add_card.html", template_ctx)
+
+    return render(
+        request,
+        "anime/partials/_search_add_card.html",
+        {"added": True, "entry": entry, "search_query": q},
+    )
 
 
 def search_anime(request):
@@ -310,8 +406,6 @@ def search_anime(request):
             ).select_related("anime")
             user_entries = {entry.anime_id: entry for entry in entries}
 
-    tracker_results = _fetch_search_tracker_results(request.user, query)
-
     sources = (
         ordered_sources_for_user(request.user)
         if request.user.is_authenticated
@@ -327,126 +421,52 @@ def search_anime(request):
         for source in sources
     ]
 
-    has_tracker_token = bool(getattr(request.user, "tracker_access_token", ""))
+    tracker_results: list[dict] = []
+    has_tracker_token = False
+    if request.user.is_authenticated and query.strip():
+        has_tracker_token = bool(getattr(request.user, "tracker_access_token", ""))
+        if has_tracker_token:
+            tracker_results = _tracker_hits_not_in_library(request.user, query)
+
     context = {
         "query": query,
         "results": results,
         "user_entries": user_entries,
-        "tracker_results": tracker_results,
         "source_links": source_links,
         "unauthenticated": not request.user.is_authenticated,
+        "library_status_choices": UserAnime.STATUS_CHOICES
+        if request.user.is_authenticated
+        else [],
+        "tracker_results": tracker_results,
         "has_tracker_token": has_tracker_token,
     }
     return render(request, "anime/search.html", context)
 
 
 @login_required
-@require_POST
-def add_to_library_view(request):
-    """HTMX endpoint: add an AniList title to the caller's library.
-
-    Form fields: ``tracker_id`` (required), ``status`` (defaults to
-    ``planning``), optional ``progress`` and ``score``. On success returns
-    the swapped card partial; on validation/tracker errors returns the same
-    partial in an error state with a toast OOB swap so the SPA can surface
-    the failure inline.
-    """
-    if not getattr(request.user, "tracker_access_token", ""):
-        return HttpResponseBadRequest("Connect AniList before adding titles.")
-
-    tracker_id = (request.POST.get("tracker_id") or "").strip()
-    if not tracker_id:
-        return HttpResponseBadRequest("Missing tracker_id.")
-
-    status = (request.POST.get("status") or "planning").strip().lower()
-
-    raw_progress = (request.POST.get("progress") or "").strip()
-    if raw_progress and not raw_progress.isdigit():
-        return HttpResponseBadRequest("Invalid progress.")
-    progress = int(raw_progress) if raw_progress else 0
-
-    raw_score = (request.POST.get("score") or "").strip()
-    try:
-        score = float(raw_score) if raw_score else None
-    except ValueError:
-        return HttpResponseBadRequest("Invalid score.")
-
-    # The view doesn't have a cached AniList payload at this point (the
-    # search page that triggered the click already ran in a prior request).
-    # `add_to_library` will resolve the local Anime row by tracker_id; if it
-    # was upserted by the search rendering, the call succeeds without an
-    # extra round-trip. Otherwise the caller sees a 404-style toast.
-    try:
-        user_anime = add_to_library(
-            request.user,
-            tracker_id=tracker_id,
-            status=status,
-            progress=progress,
-            score=score,
-        )
-    except WatchingLimitReached as exc:
-        return _render_add_to_library_error(request, tracker_id, str(exc), status_code=409)
-    except ValueError as exc:
-        return _render_add_to_library_error(request, tracker_id, str(exc), status_code=400)
-
-    if request.headers.get("HX-Request") == "true":
-        response = render(
-            request,
-            "anime/partials/_search_add_card.html",
-            {"entry": user_anime, "added": True},
-        )
-        toast_html = render(request, "partials/toast.html", {
-            "id": f"add-{user_anime.anime_id}",
-            "message": "Added to your list!",
-            "type": "success",
-        }).content.decode("utf-8")
-        response.content += (
-            f'<div id="toast-container" hx-swap-oob="beforeend">{toast_html}</div>'
-        ).encode("utf-8")
-        return response
-
-    return redirect(f"{reverse('anime_search')}?q={request.POST.get('q', '')}")
-
-
-def _render_add_to_library_error(
-    request, tracker_id: str, message: str, *, status_code: int
-):
-    """Render an HTMX error response for the Add-to-library flow.
-
-    Returns a toast OOB swap with the given message and re-renders the
-    original card so the user can retry. Falls back to a plain 400/409
-    text response for non-HTMX callers.
-    """
-    if request.headers.get("HX-Request") != "true":
-        return HttpResponse(message, status=status_code)
-
-    response = render(
-        request,
-        "anime/partials/_search_add_card.html",
-        {"tracker_id": tracker_id, "added": False, "error": message},
-        status=status_code,
-    )
-    toast_html = render(request, "partials/toast.html", {
-        "id": f"add-error-{tracker_id}",
-        "message": message,
-        "type": "error",
-    }).content.decode("utf-8")
-    response.content += (
-        f'<div id="toast-container" hx-swap-oob="beforeend">{toast_html}</div>'
-    ).encode("utf-8")
-    return response
-
-
-@login_required
 def watching_list(request):
     entries = UserAnime.objects.filter(user=request.user, status="watching").select_related("anime").order_by("-updated_at")
-    return render(request, "anime/watching.html", {"watching_entries": entries})
+    return render(
+        request,
+        "anime/watching.html",
+        {
+            "watching_entries": entries,
+            "library_status_choices": UserAnime.STATUS_CHOICES,
+        },
+    )
 
 
 @login_required
 def completed_list(request):
     entries = UserAnime.objects.filter(user=request.user, status="completed").select_related("anime").order_by("-updated_at")
-    return render(request, "anime/completed.html", {"completed_entries": entries})
+    return render(
+        request,
+        "anime/completed.html",
+        {
+            "completed_entries": entries,
+            "library_status_choices": UserAnime.STATUS_CHOICES,
+        },
+    )
 
 
 @login_required

@@ -3,52 +3,43 @@
 {% block title %}Aniflow Dashboard{% endblock %}
 
 {% block top_bar_search %}
-  <form method="get" action="{% url 'anime_search' %}" class="relative group max-w-md">
-    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-accent transition-colors"></i>
-    <input 
-      type="text" 
-      name="q" 
-      placeholder="Search anime, movies, series..." 
-      class="w-full bg-white/[0.03] border border-border rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-accent/50 focus:bg-white/[0.05] transition-all duration-300"
-    />
-    <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1">
-      <kbd class="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-bold bg-white/5 border border-white/10 rounded-lg text-muted">⌘</kbd>
-      <kbd class="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-bold bg-white/5 border border-white/10 rounded-lg text-muted">K</kbd>
-    </div>
-  </form>
+ <form method="get" action="{% url 'anime_search' %}" class="relative max-w-md w-full">
+ <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"></i>
+ <input
+ type="text"
+ name="q"
+ placeholder="Search anime, movies, series..."
+ class="neo-input pl-12 pr-4 text-base w-full"
+ />
+ </form>
 {% endblock %}
 
 {% block top_bar_actions %}
-  <form
-    method="post"
-    hx-post="{% url 'sync_list' %}"
-    hx-swap="none"
-    class="flex items-center"
-  >
-    {% csrf_token %}
-    <button type="submit" class="flex items-center gap-2.5 bg-white/[0.03] hover:bg-white/[0.08] border border-border px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
-      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-      <span>Sync AniList</span>
-    </button>
-  </form>
+ <form method="post" hx-post="{% url 'sync_list' %}" hx-swap="none" class="flex items-center">
+ {% csrf_token %}
+ <button type="submit" class="neo-btn-secondary">
+ <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+ <span class="hidden sm:inline">Sync AniList</span>
+ </button>
+ </form>
 {% endblock %}
 
 {% block content %}
-  {% if unauthenticated %}
-    <div class="flex flex-col items-center justify-center h-full text-center">
-      <div class="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mb-6">
-        <i data-lucide="link" class="w-10 h-10 text-accent"></i>
-      </div>
-      <h2 class="text-2xl font-bold mb-2">Connect AniList</h2>
-      <p class="text-muted mb-8 max-w-md">Sign in to sync your list, track progress, and get personalized recommendations.</p>
-      <a href="{% url 'anilist_login' %}" class="bg-accent hover:bg-accent-hover text-background font-bold px-8 py-3 rounded-xl transition-colors">
-        Connect AniList
-      </a>
-    </div>
-  {% else %}
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold">Dashboard</h1>
-    </div>
-    {% include "anime/partials/dashboard_sections.html" %}
-  {% endif %}
+ {% if unauthenticated %}
+ <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+ <div class="neo-icon-box w-20 h-20 mb-6 rotate-3">
+ <i data-lucide="link" class="w-10 h-10"></i>
+ </div>
+ <h2 class="text-4xl sm:text-5xl font-black uppercase mb-4 neo-text-stroke">Connect</h2>
+ <p class="font-bold text-lg mb-8 max-w-md">Sign in to sync your list, track progress, and get personalized recommendations.</p>
+ <a href="{% url 'anilist_login' %}" class="neo-btn-primary !h-14 !px-10">
+ Connect AniList
+ </a>
+ </div>
+ {% else %}
+ <div class="mb-8">
+ <h1 class="text-3xl sm:text-4xl font-black uppercase tracking-tight">Dashboard</h1>
+ </div>
+ {% include "anime/partials/dashboard_sections.html" %}
+ {% endif %}
 {% endblock %}
