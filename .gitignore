@@ -1,1 +1,6 @@
 .env
+__pycache__/
+*.pyc
+
+# Local improvement plan (not tracked)
+IMPROVEMENT_PLAN.md
