@@ -250,7 +250,10 @@
         <a href="{% url 'recommendations' %}" class="neo-nav-item w-full {% if request.resolver_match.url_name == 'recommendations' %}active{% endif %}">
           <i data-lucide="sparkles" class="w-5 h-5"></i><span>Recommendations</span>
         </a>
-        <div class="sidebar-section-title mt-8">Account</div>
+      </nav>
+
+      <div class="p-4 border-t-4 border-black space-y-2">
+        {% if user.is_authenticated %}
         <a href="{% url 'user_settings' %}" class="neo-nav-item w-full {% if request.resolver_match.url_name == 'user_settings' %}active{% endif %}">
           <i data-lucide="settings" class="w-5 h-5"></i><span>Settings</span>
         </a>
@@ -260,7 +263,41 @@
             <i data-lucide="log-out" class="w-5 h-5"></i><span>Disconnect AniList</span>
           </button>
         </form>
-      </nav>
+        {% if not user.tracker_access_token %}
+        <a href="{% url 'anilist_login' %}" class="neo-nav-item w-full">
+          <i data-lucide="link" class="w-5 h-5"></i><span>Reconnect AniList</span>
+        </a>
+        {% endif %}
+
+        <div class="pt-4 flex items-center gap-3 px-2">
+          <div class="w-12 h-12 border-4 border-black bg-neo-accent flex items-center justify-center font-black text-lg neo-shadow-sm">
+            {{ user.username|slice:":1"|upper }}
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-black truncate">{{ user.username }}</span>
+            {% if user.tracker_access_token %}
+            <span class="text-[10px] font-black uppercase tracking-wider">AniList Connected</span>
+            {% else %}
+            <span class="text-[10px] font-black uppercase tracking-wider text-neo-ink/70">Not connected</span>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <a href="{% url 'anilist_login' %}" class="neo-nav-item w-full">
+          <i data-lucide="link" class="w-5 h-5"></i><span>Connect AniList</span>
+        </a>
+
+        <div class="pt-4 flex items-center gap-3 px-2">
+          <div class="w-12 h-12 border-4 border-black bg-neo-accent flex items-center justify-center font-black text-lg neo-shadow-sm">
+            G
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-black truncate">Guest</span>
+            <span class="text-[10px] font-black uppercase tracking-wider text-neo-ink/70">Not connected</span>
+          </div>
+        </div>
+        {% endif %}
+      </div>
     </aside>
 
     <!-- Desktop sidebar -->
@@ -296,6 +333,7 @@
       </nav>
 
       <div class="p-4 border-t-4 border-black space-y-2">
+        {% if user.is_authenticated %}
         <a href="{% url 'user_settings' %}" class="neo-nav-item {% if request.resolver_match.url_name == 'user_settings' %}active{% endif %}">
           <i data-lucide="settings" class="w-5 h-5"></i>
           <span>Settings</span>
@@ -307,20 +345,42 @@
             <span>Disconnect AniList</span>
           </button>
         </form>
+        {% if not user.tracker_access_token %}
+        <a href="{% url 'anilist_login' %}" class="neo-nav-item w-full">
+          <i data-lucide="link" class="w-5 h-5"></i>
+          <span>Reconnect AniList</span>
+        </a>
+        {% endif %}
 
         <div class="pt-4 flex items-center gap-3 px-2">
           <div class="w-12 h-12 border-4 border-black bg-neo-accent flex items-center justify-center font-black text-lg neo-shadow-sm">
-            {% if user.is_authenticated %}
-              {{ user.username|slice:":1"|upper }}
-            {% else %}
-              A
-            {% endif %}
+            {{ user.username|slice:":1"|upper }}
           </div>
           <div class="flex flex-col min-w-0">
-            <span class="text-sm font-black truncate">{% if user.is_authenticated %}{{ user.username }}{% else %}Guest{% endif %}</span>
+            <span class="text-sm font-black truncate">{{ user.username }}</span>
+            {% if user.tracker_access_token %}
             <span class="text-[10px] font-black uppercase tracking-wider">AniList Connected</span>
+            {% else %}
+            <span class="text-[10px] font-black uppercase tracking-wider text-neo-ink/70">Not connected</span>
+            {% endif %}
           </div>
         </div>
+        {% else %}
+        <a href="{% url 'anilist_login' %}" class="neo-nav-item w-full">
+          <i data-lucide="link" class="w-5 h-5"></i>
+          <span>Connect AniList</span>
+        </a>
+
+        <div class="pt-4 flex items-center gap-3 px-2">
+          <div class="w-12 h-12 border-4 border-black bg-neo-accent flex items-center justify-center font-black text-lg neo-shadow-sm">
+            G
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-black truncate">Guest</span>
+            <span class="text-[10px] font-black uppercase tracking-wider text-neo-ink/70">Not connected</span>
+          </div>
+        </div>
+        {% endif %}
       </div>
     </aside>
 
