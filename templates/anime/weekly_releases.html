@@ -4,12 +4,7 @@
 {% block title %}Weekly Releases - AniFlow{% endblock %}
 
 {% block content %}
-<div class="mb-12 flex items-center justify-between">
- <div class="flex items-center gap-3">
- <div class="w-2 h-8 bg-accent border-4 border-black"></div>
- <h1 class="text-3xl font-black tracking-tight">Weekly Airing Schedule</h1>
- </div>
-</div>
+{% include "partials/page_header.html" with title="Weekly Airing Schedule" %}
 
 {% if weekly_releases.items %}
  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">

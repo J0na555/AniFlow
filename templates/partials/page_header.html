@@ -1,0 +1,35 @@
+<div class="{{ margin_class|default:'mb-12' }} flex {{ layout_class|default:'items-center justify-between' }}">
+  <div class="{% if show_bar != False %}flex items-center gap-3{% endif %}">
+    {% if show_bar != False %}
+    <div class="w-2 h-8 bg-accent border-4 border-black"></div>
+    {% endif %}
+    <div>
+      <h1 class="text-3xl font-black {{ title_class|default:'tracking-tight' }}">{{ title }}</h1>
+      {% if subtitle %}
+      <p class="font-bold mt-2">{{ subtitle }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% if badge_label or action_url %}
+  <div class="flex items-center gap-3 flex-shrink-0">
+    {% if badge_label %}
+    <span class="px-4 py-1.5 border-4 border-black bg-neo-white text-xs font-black text-neo-ink/80 uppercase tracking-widest">
+      {{ badge }} {{ badge_label }}
+    </span>
+    {% endif %}
+    {% if action_url %}
+      {% if action_style == "link" %}
+      <a href="{% url action_url %}" class="inline-flex items-center gap-2 neo-link">
+        {% if action_icon %}<i data-lucide="{{ action_icon }}" class="w-4 h-4"></i>{% endif %}
+        {{ action_text }}
+      </a>
+      {% else %}
+      <a href="{% url action_url %}" class="neo-btn-ghost">
+        {% if action_icon %}<i data-lucide="{{ action_icon }}" class="w-4 h-4"></i>{% endif %}
+        {{ action_text }}
+      </a>
+      {% endif %}
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
