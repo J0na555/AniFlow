@@ -4,15 +4,7 @@
 {% block title %}Completed - AniFlow{% endblock %}
 
 {% block content %}
-<div class="mb-12 flex items-center justify-between">
- <div class="flex items-center gap-3">
- <div class="w-2 h-8 bg-accent border-4 border-black"></div>
- <h1 class="text-3xl font-black tracking-tight">Completed Titles</h1>
- </div>
- <span class="px-4 py-1.5 border-4 border-black bg-neo-white text-xs font-black text-neo-ink/80 uppercase tracking-widest">
- {{ completed_entries|length }} titles
- </span>
-</div>
+{% include "partials/page_header.html" with title="Completed Titles" badge=completed_entries|length badge_label="titles" %}
 
 {% if completed_entries %}
  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">

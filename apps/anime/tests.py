@@ -244,3 +244,19 @@ class DashboardAuthTemplateTests(TestCase):
         self.assertContains(response, "Reconnect AniList")
         self.assertContains(response, "Not connected")
         self.assertNotContains(response, "AniList Connected")
+
+    def test_sidebar_includes_search_link(self) -> None:
+        response = self.client.get(reverse("dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("anime_search"))
+        self.assertContains(response, ">Search</span>")
+
+    def test_search_page_marks_nav_item_active(self) -> None:
+        response = self.client.get(reverse("anime_search"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'href="{reverse("anime_search")}" class="neo-nav-item active"',
+        )

@@ -17,16 +17,7 @@
 {% endblock %}
 
 {% block content %}
- <div class="mb-12 flex items-center justify-between">
- <div class="flex items-center gap-3">
- <div class="w-2 h-8 bg-accent border-4 border-black"></div>
- <h1 class="text-3xl font-black tracking-tight">Search Results</h1>
- </div>
- <a href="{% url 'dashboard' %}" class="neo-btn-ghost">
- <i data-lucide="arrow-left" class="w-4 h-4"></i>
- Back to Dashboard
- </a>
- </div>
+ {% include "partials/page_header.html" with title="Search Results" action_url="dashboard" action_text="Back to Dashboard" action_icon="arrow-left" %}
 
  {% if unauthenticated %}
  <div class="card-base p-8 mb-12 bg-neo-muted flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
