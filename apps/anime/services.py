@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from apps.productivity.services import get_watching_limit_state
 
-from .models import Anime, UserAnime
+from .models import Anime, UserAnime, UserAnimeProgressEvent
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +55,19 @@ def normalize_tracker_status(value: str | None) -> str:
     return normalized
 
 
+def log_progress_delta(user, anime: Anime, old_progress: int, new_progress: int) -> None:
+    delta = new_progress - old_progress
+    if delta <= 0:
+        return
+    UserAnimeProgressEvent.objects.create(user=user, anime=anime, delta=delta)
+
+
 def apply_progress_update(
     user_anime: UserAnime,
     progress: int,
     tracker_status: str | None = None,
 ) -> UserAnime:
+    old_progress = user_anime.progress
     status = normalize_tracker_status(tracker_status) or user_anime.status
     if progress > 0 and user_anime.status == "planning":
         status = "watching"
@@ -82,6 +90,7 @@ def apply_progress_update(
             "updated_at",
         ]
     )
+    log_progress_delta(user_anime.user, user_anime.anime, old_progress, user_anime.progress)
     return user_anime
 
 
@@ -93,6 +102,7 @@ def update_user_anime_status(user, *, anime_id: int, status: str) -> UserAnime:
 
     user_anime = UserAnime.objects.select_related("anime").get(user=user, anime_id=anime_id)
     prev = user_anime.status
+    old_progress = user_anime.progress
 
     if normalized == "watching" and prev != "watching":
         limit_state = get_watching_limit_state(user)
@@ -122,6 +132,7 @@ def update_user_anime_status(user, *, anime_id: int, status: str) -> UserAnime:
             changed.add("completed_date")
 
     user_anime.save(update_fields=sorted(changed))
+    log_progress_delta(user, user_anime.anime, old_progress, user_anime.progress)
     return user_anime
 
 
