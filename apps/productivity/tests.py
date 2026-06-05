@@ -7,8 +7,11 @@ from django.utils import timezone
 
 from apps.anime.models import Anime, UserAnime, UserAnimeProgressEvent
 from apps.anime.services import apply_progress_update
+from apps.productivity.services import enable_watching_limit_override
 from apps.productivity.services import get_productivity_stats
+from apps.productivity.services import get_watching_limit_state
 from apps.productivity.services import get_weekly_episodes_watched
+from apps.users.models import UserSettings
 
 
 class WeeklyEpisodesWatchedTests(TestCase):
@@ -98,3 +101,108 @@ class ProgressUpdateViewWeeklyStatTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Episodes watched this week")
         self.assertEqual(get_weekly_episodes_watched(self.user), 1)
+
+
+class ProductivityStatsTests(TestCase):
+    def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="stats-user",
+            password="password123",
+        )
+
+    def test_completion_rate_excludes_planning_entries(self) -> None:
+        for tracker_id, status in [
+            ("2001", "completed"),
+            ("2002", "completed"),
+            ("2003", "watching"),
+            ("2004", "planning"),
+        ]:
+            anime = Anime.objects.create(
+                tracker_type="anilist",
+                tracker_id=tracker_id,
+                title_english=f"Title {tracker_id}",
+                episodes=12,
+            )
+            UserAnime.objects.create(
+                user=self.user,
+                anime=anime,
+                status=status,
+                progress=0,
+            )
+
+        stats = get_productivity_stats(self.user)
+
+        self.assertEqual(stats.watching_count, 1)
+        self.assertEqual(stats.completed_count, 2)
+        self.assertEqual(stats.completion_rate, 66.7)
+
+    def test_completion_rate_zero_when_nothing_started(self) -> None:
+        anime = Anime.objects.create(
+            tracker_type="anilist",
+            tracker_id="2005",
+            title_english="Planning Only",
+            episodes=12,
+        )
+        UserAnime.objects.create(
+            user=self.user,
+            anime=anime,
+            status="planning",
+            progress=0,
+        )
+
+        stats = get_productivity_stats(self.user)
+
+        self.assertEqual(stats.completion_rate, 0.0)
+
+
+class WatchingLimitStateTests(TestCase):
+    def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="limit-user",
+            password="password123",
+        )
+        self.settings, _ = UserSettings.objects.get_or_create(user=self.user)
+
+    def test_limit_reached_when_at_capacity(self) -> None:
+        self.settings.max_watching_limit = 2
+        self.settings.ignore_watching_limit = False
+        self.settings.save()
+
+        state = get_watching_limit_state(self.user, watching_count=2)
+
+        self.assertTrue(state.enabled)
+        self.assertTrue(state.reached)
+        self.assertEqual(state.remaining_slots, 0)
+        self.assertIn("Watching limit reached", state.message)
+
+    def test_limit_disabled_when_zero(self) -> None:
+        self.settings.max_watching_limit = 0
+        self.settings.save()
+
+        state = get_watching_limit_state(self.user, watching_count=5)
+
+        self.assertFalse(state.enabled)
+        self.assertFalse(state.reached)
+        self.assertEqual(state.remaining_slots, 0)
+        self.assertEqual(state.message, "Watching limit is disabled.")
+
+    def test_ignored_limit_does_not_block(self) -> None:
+        self.settings.max_watching_limit = 1
+        self.settings.ignore_watching_limit = True
+        self.settings.save()
+
+        state = get_watching_limit_state(self.user, watching_count=3)
+
+        self.assertTrue(state.enabled)
+        self.assertFalse(state.reached)
+        self.assertIn("ignored", state.message)
+
+    def test_enable_watching_limit_override_persists_flag(self) -> None:
+        self.settings.ignore_watching_limit = False
+        self.settings.save()
+
+        updated = enable_watching_limit_override(self.user)
+
+        self.assertTrue(updated.ignore_watching_limit)
+        self.settings.refresh_from_db()
+        self.assertTrue(self.settings.ignore_watching_limit)

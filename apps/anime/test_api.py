@@ -138,3 +138,40 @@ class AnimeApiTests(TestCase):
         response = self.client.post(reverse("api_sync_anilist"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["synced"], 1)
+
+    def test_unauthenticated_requests_return_json_401(self) -> None:
+        self.client.logout()
+        expected = {"detail": "Authentication required.", "code": "not_authenticated"}
+
+        for route_name in (
+            "api_dashboard",
+            "api_anime_search",
+            "api_library_progress",
+            "api_library_status",
+            "api_sync_anilist",
+        ):
+            with self.subTest(route=route_name):
+                if route_name in {"api_library_progress", "api_library_status"}:
+                    url = reverse(route_name, args=[self.anime.id])
+                else:
+                    url = reverse(route_name)
+
+                if route_name == "api_library_progress":
+                    response = self.client.patch(
+                        url,
+                        data=json.dumps({"progress": 4}),
+                        content_type="application/json",
+                    )
+                elif route_name == "api_sync_anilist":
+                    response = self.client.post(url)
+                elif route_name == "api_library_status":
+                    response = self.client.post(
+                        url,
+                        data=json.dumps({"status": "watching"}),
+                        content_type="application/json",
+                    )
+                else:
+                    response = self.client.get(url)
+
+                self.assertEqual(response.status_code, 401)
+                self.assertEqual(response.json(), expected)

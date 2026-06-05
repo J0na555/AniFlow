@@ -8,6 +8,7 @@ from django.utils import timezone
 from apps.anime.models import Anime, UserAnime
 from apps.anime.services import apply_progress_update
 from apps.anime.services import update_user_anime_status
+from apps.productivity.services import get_weekly_episodes_watched
 from apps.users.models import UserSettings
 from apps.streaming.models import StreamingSource
 from apps.streaming.router import StreamingRoute
@@ -76,6 +77,28 @@ class ResumeAnimeViewTests(TestCase):
 
 
 class ApplyProgressUpdateTests(TestCase):
+    def test_plus_one_increment_updates_weekly_stat(self) -> None:
+        user = get_user_model().objects.create_user(
+            username="weekly-log-user",
+            password="password123",
+        )
+        anime = Anime.objects.create(
+            tracker_type="anilist",
+            tracker_id="778",
+            title_english="Weekly Log Target",
+            episodes=12,
+        )
+        user_anime = UserAnime.objects.create(
+            user=user,
+            anime=anime,
+            status="watching",
+            progress=4,
+        )
+
+        apply_progress_update(user_anime, progress=5)
+
+        self.assertEqual(get_weekly_episodes_watched(user), 1)
+
     def test_progress_marks_start_and_completion_dates(self) -> None:
         user = get_user_model().objects.create_user(
             username="progress-user",
@@ -193,3 +216,31 @@ class UpdateStatusViewTests(TestCase):
         self.assertContains(response, "Watching Limit Reached")
         planning = UserAnime.objects.get(user=self.user, anime=other)
         self.assertEqual(planning.status, "planning")
+
+
+class DashboardAuthTemplateTests(TestCase):
+    def test_logged_out_sidebar_shows_guest_cta(self) -> None:
+        response = self.client.get(reverse("dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Guest")
+        self.assertContains(response, "Connect AniList")
+        self.assertNotContains(response, "AniList Connected")
+        self.assertNotContains(response, "Disconnect AniList")
+
+    @patch("apps.anime.views.sync_user_list")
+    def test_logged_in_without_token_shows_reconnect_not_connected(
+        self, _mock_sync
+    ) -> None:
+        user = get_user_model().objects.create_user(
+            username="sidebar-user",
+            password="password123",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Reconnect AniList")
+        self.assertContains(response, "Not connected")
+        self.assertNotContains(response, "AniList Connected")
