@@ -39,7 +39,7 @@
  <h3 class="font-bold text-base line-clamp-2 group-hover:text-accent transition-colors leading-tight px-2">
  {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
  </h3>
- <p class="text-xs font-bold text-neo-ink/80 mt-2 font-bold uppercase tracking-widest px-2">{{ entry.progress }} / {{ entry.anime.episodes|default:"?" }} episodes</p>
+ <p class="text-xs font-bold text-neo-ink/80 mt-2 uppercase tracking-widest px-2">{{ entry.progress }} / {{ entry.anime.episodes|default:"?" }} episodes</p>
  <div class="px-2 mt-3">
  {% include "anime/partials/_library_status_form.html" with anime_id=entry.anime_id current_status=entry.status status_choices=library_status_choices %}
  </div>

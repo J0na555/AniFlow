@@ -27,7 +27,7 @@
  </div>
  <div>
  <p class="text-lg font-black text-neo-ink mb-1">Connect AniList</p>
- <p class="text-sm font-bold text-neo-ink/80 font-medium">Sign in to see your library, track progress, and get personalized results.</p>
+ <p class="text-sm font-bold text-neo-ink/80">Sign in to see your library, track progress, and get personalized results.</p>
  </div>
  </div>
  <a href="{% url 'anilist_login' %}" class="neo-btn-primary">
@@ -48,7 +48,7 @@
  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
  {% for anime in results %}
  {% with entry=user_entries|dict_get:anime.id %}
- <div class="card-base p-5 flex gap-6 group hover:border-accent/30 neo-shadow-lg animate-slide-up" style="animation-delay: {{ forloop.counter0|multiply:0.05 }}s">
+ <div class="card-base p-5 flex gap-6 group neo-shadow-lg animate-slide-up" style="animation-delay: {{ forloop.counter0|multiply:0.05 }}s">
  <div class="w-24 h-32 border-4 border-black overflow-hidden bg-neo-white flex-shrink-0 neo-shadow-md">
  {% if anime.cover_image_url %}
  <img src="{{ anime.cover_image_url }}" alt="{{ anime.title_english }}" class="w-full h-full object-cover transition-transform duration-700">
@@ -69,23 +69,23 @@
  <div class="flex items-center gap-3 flex-wrap">
  {% if entry %}
  {% if entry.status != "completed" and entry.status != "dropped" %}
- <a href="{% url 'anime_resume' anime.id %}" class="bg-accent/10 hover:bg-accent text-accent hover:text-background text-[10px] font-black uppercase tracking-widest px-4 py-2 border-4 border-black transition-all flex items-center gap-2 border border-accent/20">
+ <a href="{% url 'anime_resume' anime.id %}" class="bg-accent/10 hover:bg-accent text-accent hover:text-background text-[10px] font-black uppercase tracking-widest px-4 py-2 border-4 border-black transition-all flex items-center gap-2">
  <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
  Resume
  </a>
  {% else %}
- <a href="{% url 'anime_play' anime.id %}" target="_blank" rel="noopener noreferrer" class="bg-neo-white hover:bg-neo-secondary text-neo-ink text-[10px] font-black uppercase tracking-widest px-4 py-2 border-4 border-black transition-all flex items-center gap-2 border border-white/10">
+ <a href="{% url 'anime_play' anime.id %}" target="_blank" rel="noopener noreferrer" class="bg-neo-white hover:bg-neo-secondary text-neo-ink text-[10px] font-black uppercase tracking-widest px-4 py-2 border-4 border-black transition-all flex items-center gap-2">
  <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
  Play
  </a>
  <span class="text-[10px] text-accent font-black uppercase tracking-widest">{% if entry.status == "completed" %}Completed{% else %}Dropped{% endif %}</span>
  {% endif %}
  {% else %}
- <a href="{% url 'anime_play' anime.id %}" target="_blank" rel="noopener noreferrer" class="bg-neo-white hover:bg-neo-secondary text-neo-ink text-[10px] font-black uppercase tracking-widest px-4 py-2 border-4 border-black transition-all flex items-center gap-2 border border-white/10">
+ <a href="{% url 'anime_play' anime.id %}" target="_blank" rel="noopener noreferrer" class="bg-neo-white hover:bg-neo-secondary text-neo-ink text-[10px] font-black uppercase tracking-widest px-4 py-2 border-4 border-black transition-all flex items-center gap-2">
  <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
  Play
  </a>
- <span class="text-[10px] font-bold text-neo-ink/80 font-black uppercase tracking-widest">Not in library</span>
+ <span class="text-[10px] font-black text-neo-ink/80 uppercase tracking-widest">Not in library</span>
  {% endif %}
  </div>
  {% if entry and library_status_choices %}
@@ -102,11 +102,11 @@
  <div class="w-24 h-24 bg-neo-white border-4 border-black flex items-center justify-center mx-auto mb-8">
  <i data-lucide="search-x" class="w-12 h-12 font-bold text-neo-ink/80"></i>
  </div>
- <p class="text-lg font-bold text-neo-ink/80 font-medium">No local matches found for "{{ query }}".</p>
+ <p class="text-lg font-bold text-neo-ink/80">No local matches found for "{{ query }}".</p>
  </div>
  {% else %}
  <div class="card-base p-24 text-center ">
- <p class="text-lg font-bold text-neo-ink/80 font-medium">Enter a search term to see results from your library.</p>
+ <p class="text-lg font-bold text-neo-ink/80">Enter a search term to see results from your library.</p>
  </div>
  {% endif %}
  </div>
@@ -123,7 +123,7 @@
  {% for item in source_links %}
  <a href="{{ item.search_url }}" target="_blank" rel="noopener noreferrer" class="card-base p-5 flex items-center justify-between transition-all group ">
  <div class="flex items-center gap-4">
- <div class="w-12 h-12 border-4 border-black bg-neo-white flex items-center justify-center border border-white/10 group-hover:border-accent/30 transition-colors">
+ <div class="w-12 h-12 border-4 border-black bg-neo-white flex items-center justify-center transition-colors">
  <i data-lucide="globe" class="w-6 h-6 font-bold text-neo-ink/80 group-hover:text-accent transition-all duration-500 group-hover:rotate-12"></i>
  </div>
  <span class="font-bold text-base">{{ item.source.name }}</span>
@@ -145,7 +145,7 @@
  <div class="flex items-center gap-2 mb-8">
  <div class="w-1.5 h-5 bg-accent border-4 border-black"></div>
  <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Add to your list</h2>
- <span class="text-[10px] font-black uppercase tracking-widest font-bold text-neo-ink/80">AniList</span>
+ <span class="text-[10px] font-black uppercase tracking-widest text-neo-ink/80">AniList</span>
  </div>
 
  {% if not has_tracker_token %}

@@ -62,7 +62,7 @@
  {% if entry.status == "watching" %}
  <a
  href="{% url 'anime_resume' entry.anime_id %}"
- class="bg-accent/10 hover:bg-accent text-accent hover:text-background text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2 border border-accent/20"
+ class="bg-accent/10 hover:bg-accent text-accent hover:text-background text-[10px] font-black uppercase tracking-widest px-4 py-2 border-4 border-black transition-all flex items-center gap-2"
  >
  <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
  Resume
@@ -96,10 +96,10 @@
 {% elif error and tracker_id %}
  <div
  id="add-card-{{ tracker_id }}"
- class="card-base p-5 flex gap-6 border-red-500/30 bg-red-500/[0.04] animate-slide-up"
+ class="card-base p-5 flex gap-6 bg-neo-accent/10 animate-slide-up"
  >
- <div class="w-24 h-32 border-4 border-black overflow-hidden bg-neo-accent flex-shrink-0 flex items-center justify-center border-4 border-black">
- <i data-lucide="alert-circle" class="w-10 h-10 text-red-500"></i>
+ <div class="w-24 h-32 border-4 border-black overflow-hidden bg-neo-accent flex-shrink-0 flex items-center justify-center">
+ <i data-lucide="alert-circle" class="w-10 h-10 text-neo-ink"></i>
  </div>
  <div class="flex flex-col justify-center min-w-0 flex-1 gap-3">
  <p class="text-sm font-black text-neo-ink">Could not add title</p>
@@ -110,13 +110,13 @@
  </div>
  </div>
 {% elif tracker_hit %}
- <div id="add-card-{{ tracker_hit.tracker_id }}" class="card-base p-5 flex gap-6 group hover:border-accent/30 animate-slide-up">
+ <div id="add-card-{{ tracker_hit.tracker_id }}" class="card-base p-5 flex gap-6 group animate-slide-up">
  <div class="w-24 h-32 border-4 border-black overflow-hidden flex-shrink-0 neo-shadow-sm bg-neo-white">
  {% if tracker_hit.cover_image_url %}
  <img
  src="{{ tracker_hit.cover_image_url }}"
  alt="{{ tracker_hit.title_english }}"
- class="w-full h-full object-cover object-cover"
+ class="w-full h-full object-cover"
  >
  {% else %}
  <div class="w-full h-full flex items-center justify-center">
@@ -140,7 +140,7 @@
  {% endif %}
  </p>
  </div>
- <div class="mt-4 pt-4 border-t border-white/10">
+ <div class="mt-4 pt-4 border-t-4 border-black">
  <form
  method="post"
  action="{% url 'anime_add_to_library' %}"
@@ -156,7 +156,7 @@
  <span class="text-[10px] font-black uppercase tracking-widest text-neo-ink">List status</span>
  <select
  name="status"
- class="w-full neo-input !h-12 !text-sm py-2.5 px-3 text-xs font-bold text-neo-ink focus:outline-none focus:border-accent/50 transition-colors appearance-none cursor-pointer"
+ class="neo-input !h-12 !text-sm !px-3 font-bold uppercase tracking-wider appearance-none cursor-pointer"
  >
  <option value="planning" selected>Planning</option>
  <option value="watching">Watching</option>
