@@ -32,11 +32,6 @@
  {% endfor %}
  </div>
 {% else %}
- <div class="card-base p-24 text-center ">
- <div class="w-24 h-24 bg-neo-white border-4 border-black flex items-center justify-center mx-auto mb-8">
- <i data-lucide="sparkles" class="w-12 h-12 font-bold text-neo-ink/80"></i>
- </div>
- <p class="text-lg font-bold text-neo-ink/80">{{ recommendations.message|default:"No recommendations are available from AniList yet." }}</p>
- </div>
+ {% include "partials/empty_state.html" with icon="sparkles" title="No recommendations yet" body=recommendations.message|default:"No recommendations are available from AniList yet. Keep watching to unlock personalized picks." cta_url="anime_search" cta_text="Discover Anime" cta_icon="search" %}
 {% endif %}
 {% endblock %}

@@ -36,14 +36,27 @@
  </div>
  {% endif %}
 
- <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
- <!-- Local Library Matches -->
- <div class="lg:col-span-2">
- <div class="flex items-center gap-2 mb-8">
- <div class="w-1.5 h-5 bg-accent border-4 border-black"></div>
- <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Matches in Your Library</h2>
+ <!-- Tabbed search surface: Library / Streaming / Add from AniList -->
+ <div class="neo-tabs">
+ <div class="flex flex-wrap items-center gap-3 mb-10" role="tablist" aria-label="Search results">
+ <button type="button" class="neo-tab active" data-tab-target="tab-library" role="tab" aria-selected="true">
+ <i data-lucide="library" class="w-4 h-4"></i>
+ Library{% if results %} <span class="neo-tab-count">{{ results|length }}</span>{% endif %}
+ </button>
+ <button type="button" class="neo-tab" data-tab-target="tab-streaming" role="tab" aria-selected="false">
+ <i data-lucide="globe" class="w-4 h-4"></i>
+ Streaming
+ </button>
+ {% if request.user.is_authenticated %}
+ <button type="button" class="neo-tab" data-tab-target="tab-anilist" role="tab" aria-selected="false">
+ <i data-lucide="plus-circle" class="w-4 h-4"></i>
+ Add from AniList
+ </button>
+ {% endif %}
  </div>
- 
+
+ <!-- Library panel -->
+ <div id="tab-library" class="neo-tab-panel" role="tabpanel">
  {% if results %}
  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
  {% for anime in results %}
@@ -98,28 +111,16 @@
  {% endfor %}
  </div>
  {% elif query %}
- <div class="card-base p-24 text-center ">
- <div class="w-24 h-24 bg-neo-white border-4 border-black flex items-center justify-center mx-auto mb-8">
- <i data-lucide="search-x" class="w-12 h-12 font-bold text-neo-ink/80"></i>
- </div>
- <p class="text-lg font-bold text-neo-ink/80">No local matches found for "{{ query }}".</p>
- </div>
+ {% include "partials/empty_state.html" with icon="search-x" title="No local matches" body="Nothing in your library matches \""|add:query|add:"\". Try the Streaming or Add from AniList tabs." compact=True padding="p-16" %}
  {% else %}
- <div class="card-base p-24 text-center ">
- <p class="text-lg font-bold text-neo-ink/80">Enter a search term to see results from your library.</p>
- </div>
+ {% include "partials/empty_state.html" with icon="search" title="Search your library" body="Enter a title above to see results from your library." compact=True padding="p-16" %}
  {% endif %}
  </div>
 
- <!-- External Streaming Search -->
- <div>
- <div class="flex items-center gap-2 mb-8">
- <div class="w-1.5 h-5 bg-accent border-4 border-black"></div>
- <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Streaming Sites</h2>
- </div>
- 
+ <!-- Streaming panel -->
+ <div id="tab-streaming" class="neo-tab-panel hidden" role="tabpanel">
  {% if query %}
- <div class="space-y-4">
+ <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
  {% for item in source_links %}
  <a href="{{ item.search_url }}" target="_blank" rel="noopener noreferrer" class="card-base p-5 flex items-center justify-between transition-all group ">
  <div class="flex items-center gap-4">
@@ -133,22 +134,16 @@
  {% endfor %}
  </div>
  {% else %}
- <div class="card-base p-12 text-center font-bold text-neo-ink/80 text-sm ">
- Enter a title to search streaming sites.
- </div>
+ {% include "partials/empty_state.html" with icon="globe" title="Search streaming sites" body="Enter a title above to jump straight to streaming search results." compact=True padding="p-16" %}
  {% endif %}
  </div>
- </div>
 
- {% if request.user.is_authenticated and query %}
- <section class="mt-16 mb-8">
- <div class="flex items-center gap-2 mb-8">
- <div class="w-1.5 h-5 bg-accent border-4 border-black"></div>
- <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Add to your list</h2>
- <span class="text-[10px] font-black uppercase tracking-widest text-neo-ink/80">AniList</span>
- </div>
-
- {% if not has_tracker_token %}
+ {% if request.user.is_authenticated %}
+ <!-- Add from AniList panel -->
+ <div id="tab-anilist" class="neo-tab-panel hidden" role="tabpanel">
+ {% if not query %}
+ {% include "partials/empty_state.html" with icon="plus-circle" title="Add new titles" body="Search above to find titles on AniList and add them straight to your library." compact=True padding="p-16" %}
+ {% elif not has_tracker_token %}
  {% include "anime/partials/_search_add_card.html" with needs_tracker_connect=True %}
  {% elif tracker_results %}
  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -157,10 +152,9 @@
  {% endfor %}
  </div>
  {% else %}
- <div class="card-base p-12 text-center font-bold text-neo-ink/80 text-sm ">
- Either every AniList match for this query is already in your library, AniList found no titles, or the tracker lookup failed.
+ {% include "partials/empty_state.html" with icon="search-x" title="No new AniList titles" body="Every AniList match for this query is already in your library, AniList found no titles, or the tracker lookup failed." compact=True padding="p-16" %}
+ {% endif %}
  </div>
  {% endif %}
- </section>
- {% endif %}
+ </div>
 {% endblock %}

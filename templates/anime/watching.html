@@ -7,8 +7,50 @@
 {% include "partials/page_header.html" with title="Currently Watching" badge=watching_entries|length badge_label="titles" %}
 
 {% if watching_entries %}
+ {% with featured=watching_entries|first %}
+ <!-- Featured (most recent) title — larger than the rest to break the grid -->
+ <div class="mb-10 relative h-[320px] sm:h-[360px] border-4 border-black overflow-hidden group neo-shadow-xl animate-slide-up">
+ {% if featured.anime.banner_image_url %}
+ <img src="{{ featured.anime.banner_image_url }}" alt="{{ featured.anime.title_english }}" class="w-full h-full object-cover">
+ {% elif featured.anime.cover_image_url %}
+ <img src="{{ featured.anime.cover_image_url }}" alt="{{ featured.anime.title_english }}" class="w-full h-full object-cover">
+ {% else %}
+ <div class="w-full h-full flex items-center justify-center bg-neo-white">
+ <i data-lucide="image" class="w-16 h-16 text-neo-ink/40"></i>
+ </div>
+ {% endif %}
+ <div class="absolute inset-y-0 left-0 w-full sm:max-w-xl bg-neo-bg border-r-4 border-black p-6 sm:p-10 flex flex-col justify-center">
+ <div class="flex items-center gap-3 mb-4">
+ <span class="neo-badge-accent rotate-2 text-[10px]">Up Next</span>
+ <span class="text-xs font-bold text-neo-ink">Episode {{ featured.progress }} / {{ featured.anime.episodes|default:"?" }}</span>
+ </div>
+ <h2 class="text-3xl sm:text-4xl mb-5 leading-tight line-clamp-2">
+ {% firstof featured.anime.title_english featured.anime.title_romaji featured.anime.title_native "Untitled" %}
+ </h2>
+ <div class="mb-6">
+ <div class="w-48 h-2 border-4 border-black bg-neo-white overflow-hidden">
+ <div class="h-full bg-accent" style="width: {% widthratio featured.progress featured.anime.episodes|default:featured.progress 100 %}%"></div>
+ </div>
+ </div>
+ <div class="flex items-center gap-4 flex-wrap">
+ <a href="{% url 'anime_resume' featured.anime_id %}" class="neo-btn-primary !h-14 !px-8">
+ <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+ Resume Watching
+ </a>
+ <form method="post" hx-post="{% url 'anime_progress' featured.anime_id %}" hx-swap="none">
+ {% csrf_token %}
+ <input type="hidden" name="progress" value="{{ featured.progress|add:1 }}" />
+ <button type="submit" class="neo-btn-ghost w-14 h-14 p-0">
+ <i data-lucide="plus" class="w-6 h-6"></i>
+ </button>
+ </form>
+ </div>
+ </div>
+ </div>
+ {% endwith %}
+
  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
- {% for entry in watching_entries %}
+ {% for entry in watching_entries|slice:"1:" %}
  <div class="group cursor-pointer animate-slide-up" style="animation-delay: {{ forloop.counter0|multiply:0.05 }}s">
  <div class="aspect-[2/3] border-4 border-black overflow-hidden bg-neo-white mb-4 relative neo-shadow-lg transition-all duration-500">
  {% if entry.anime.cover_image_url %}
@@ -47,16 +89,6 @@
  {% endfor %}
  </div>
 {% else %}
- <div class="card-base p-24 text-center ">
- <div class="w-24 h-24 bg-neo-white border-4 border-black flex items-center justify-center mx-auto mb-8">
- <i data-lucide="play-circle" class="w-12 h-12 font-bold text-neo-ink/80"></i>
- </div>
- <h3 class="text-2xl font-black mb-4">Your watching list is empty</h3>
- <p class="font-bold text-neo-ink/80 mb-10 max-w-md mx-auto">Start tracking your progress by searching for an anime you're currently watching.</p>
- <a href="{% url 'anime_search' %}" class="neo-btn-primary !h-14">
- <i data-lucide="search" class="w-5 h-5"></i>
- Search Anime
- </a>
- </div>
+ {% include "partials/empty_state.html" with icon="play-circle" title="Your watching list is empty" body="Start tracking your progress by searching for an anime you're currently watching." cta_url="anime_search" cta_text="Search Anime" cta_icon="search" %}
 {% endif %}
 {% endblock %}
