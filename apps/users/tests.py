@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
+from apps.common.forms import NEO_CHECKBOX_CLASS, NEO_INPUT_CLASS
+from apps.users.forms import UserSettingsForm
 from apps.users.views import POST_LOGIN_REDIRECT_SESSION_KEY, _safe_post_login_redirect
 
 OAUTH_SETTINGS = {
@@ -173,3 +175,25 @@ class AnilistCallbackTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], "http://localhost:3000/library")
         mock_sync_user_list.assert_called_once()
+
+
+class SettingsFormWidgetTests(TestCase):
+    def test_form_controls_use_shared_neo_widget_classes(self) -> None:
+        form = UserSettingsForm()
+
+        self.assertIn("neo-input", NEO_INPUT_CLASS)
+        self.assertIn(NEO_INPUT_CLASS, str(form["preferred_source"]))
+        self.assertIn(NEO_INPUT_CLASS, str(form["max_watching_limit"]))
+        self.assertIn(NEO_CHECKBOX_CLASS, str(form["ignore_watching_limit"]))
+
+    def test_settings_page_renders_styled_controls(self) -> None:
+        user = get_user_model().objects.create_user(
+            username="settings-widget-user",
+            password="password123",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("user_settings"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "neo-input")

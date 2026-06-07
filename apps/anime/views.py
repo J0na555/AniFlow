@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from urllib.parse import urlparse
 
 from django.contrib.auth.decorators import login_required
@@ -135,37 +136,29 @@ def update_progress(request, anime_id: int):
             "Watching limit reached. Override the limit before starting another title."
         )
         if request.headers.get("HX-Request") == "true":
-            context = _build_dashboard_context(
-                request.user,
-                oob=True,
+            return _dashboard_oob_with_toast(
+                request,
+                message=warning_message,
+                level="error",
                 watching_limit_error=warning_message,
             )
-            return render(request, "anime/partials/dashboard_sections.html", context)
         return HttpResponseBadRequest(warning_message)
 
     tracker_response = tracker_update_progress(
         request.user, user_anime.anime.tracker_id, progress
     )
     tracker_status = normalize_tracker_status(tracker_response.get("status"))
-    apply_progress_update(
+    updated = apply_progress_update(
         user_anime,
         tracker_response.get("progress", progress),
         tracker_status,
     )
 
     if request.headers.get("HX-Request") == "true":
-        context = _build_dashboard_context(request.user, oob=True)
-        response = render(request, "anime/partials/dashboard_sections.html", context)
-        # Add a success toast
-        toast_html = render(request, "partials/toast.html", {
-            "id": "sync-success",
-            "message": "AniList synced successfully!",
-            "type": "success"
-        }).content.decode("utf-8")
-        
-        # Append toast OOB
-        response.content += f'<div id="toast-container" hx-swap-oob="beforeend">{toast_html}</div>'.encode("utf-8")
-        return response
+        return _dashboard_oob_with_toast(
+            request,
+            message=f"Marked episode {updated.progress} watched.",
+        )
 
     return redirect("dashboard")
 
@@ -179,16 +172,44 @@ def _dashboard_referer_path(request) -> bool:
     return path == ""
 
 
-def _append_toast_oob(response: HttpResponse, request, *, toast_id: str, message: str) -> HttpResponse:
+def _append_toast_oob(
+    response: HttpResponse,
+    request,
+    *,
+    message: str,
+    level: str = "success",
+) -> HttpResponse:
+    """Append an out-of-band toast to an existing HTMX response.
+
+    Each toast gets a unique id so stacking several never collides, and the
+    toast partial self-dismisses after its 5s timer.
+    """
     toast_html = render(
         request,
         "partials/toast.html",
-        {"id": toast_id, "message": message, "type": "success"},
+        {"id": uuid.uuid4().hex, "message": message, "type": level},
     ).content.decode("utf-8")
     response.content += (
         f'<div id="toast-container" hx-swap-oob="beforeend">{toast_html}</div>'.encode("utf-8")
     )
     return response
+
+
+def _dashboard_oob_with_toast(
+    request,
+    *,
+    message: str,
+    level: str = "success",
+    watching_limit_error: str = "",
+) -> HttpResponse:
+    """Render the dashboard OOB partial and attach a feedback toast."""
+    context = _build_dashboard_context(
+        request.user,
+        oob=True,
+        watching_limit_error=watching_limit_error,
+    )
+    response = render(request, "anime/partials/dashboard_sections.html", context)
+    return _append_toast_oob(response, request, message=message, level=level)
 
 
 @login_required
@@ -206,12 +227,12 @@ def update_status(request, anime_id: int):
         if request.headers.get("HX-Request") != "true":
             return HttpResponseBadRequest(str(exc))
         if _dashboard_referer_path(request):
-            context = _build_dashboard_context(
-                request.user,
-                oob=True,
+            return _dashboard_oob_with_toast(
+                request,
+                message=str(exc),
+                level="error",
                 watching_limit_error=str(exc),
             )
-            return render(request, "anime/partials/dashboard_sections.html", context)
         response = HttpResponse(status=200)
         response["HX-Redirect"] = request.META.get("HTTP_REFERER") or reverse("dashboard")
         return response
@@ -225,14 +246,7 @@ def update_status(request, anime_id: int):
             response = HttpResponse(status=200)
             response["HX-Redirect"] = next_url
             return response
-        context = _build_dashboard_context(request.user, oob=True)
-        response = render(request, "anime/partials/dashboard_sections.html", context)
-        return _append_toast_oob(
-            response,
-            request,
-            toast_id="status-updated",
-            message="List status updated.",
-        )
+        return _dashboard_oob_with_toast(request, message="List status updated.")
 
     return redirect(next_url)
 
@@ -242,18 +256,10 @@ def update_status(request, anime_id: int):
 def sync_list(request):
     sync_user_list(request.user)
     if request.headers.get("HX-Request") == "true":
-        context = _build_dashboard_context(request.user, oob=True)
-        response = render(request, "anime/partials/dashboard_sections.html", context)
-        # Add a success toast
-        toast_html = render(request, "partials/toast.html", {
-            "id": "sync-success",
-            "message": "AniList synced successfully!",
-            "type": "success"
-        }).content.decode("utf-8")
-        
-        # Append toast OOB
-        response.content += f'<div id="toast-container" hx-swap-oob="beforeend">{toast_html}</div>'.encode("utf-8")
-        return response
+        return _dashboard_oob_with_toast(
+            request,
+            message="AniList synced successfully!",
+        )
     return redirect("dashboard")
 
 
@@ -262,18 +268,10 @@ def sync_list(request):
 def ignore_watching_limit(request):
     enable_watching_limit_override(request.user)
     if request.headers.get("HX-Request") == "true":
-        context = _build_dashboard_context(request.user, oob=True)
-        response = render(request, "anime/partials/dashboard_sections.html", context)
-        # Add a success toast
-        toast_html = render(request, "partials/toast.html", {
-            "id": "sync-success",
-            "message": "AniList synced successfully!",
-            "type": "success"
-        }).content.decode("utf-8")
-        
-        # Append toast OOB
-        response.content += f'<div id="toast-container" hx-swap-oob="beforeend">{toast_html}</div>'.encode("utf-8")
-        return response
+        return _dashboard_oob_with_toast(
+            request,
+            message="Watching-limit warnings disabled.",
+        )
     return redirect("dashboard")
 
 

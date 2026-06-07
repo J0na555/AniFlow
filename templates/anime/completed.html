@@ -19,7 +19,7 @@
  </div>
  {% endif %}
  
- <div class="absolute top-4 right-4 bg-accent text-background text-[10px] font-black px-3 py-1.5 border-4 border-black flex items-center gap-1.5 neo-shadow-md border border-accent/20">
+ <div class="absolute top-4 right-4 bg-accent text-background text-[10px] font-black px-3 py-1.5 border-4 border-black flex items-center gap-1.5 neo-shadow-md">
  <i data-lucide="check" class="w-3.5 h-3.5"></i>
  DONE
  </div>
@@ -33,7 +33,7 @@
  <h3 class="font-bold text-base line-clamp-2 group-hover:text-accent transition-colors leading-tight px-2">
  {% firstof entry.anime.title_english entry.anime.title_romaji entry.anime.title_native "Untitled" %}
  </h3>
- <p class="text-xs font-bold text-neo-ink/80 mt-2 font-bold uppercase tracking-widest px-2">Finished: {{ entry.progress }} episodes</p>
+ <p class="text-xs font-bold text-neo-ink/80 mt-2 uppercase tracking-widest px-2">Finished: {{ entry.progress }} episodes</p>
  <div class="px-2 mt-3">
  {% include "anime/partials/_library_status_form.html" with anime_id=entry.anime_id current_status=entry.status status_choices=library_status_choices %}
  </div>

@@ -1,7 +1,7 @@
 <div
  id="toast-{{ id }}"
+ role="status"
  class="bg-neo-white border-4 border-black p-4 flex items-center gap-4 min-w-[280px] max-w-md animate-slide-up neo-shadow-md border-l-8 {% if type == 'error' %}border-l-neo-accent{% else %}border-l-neo-secondary{% endif %}"
- hx-on:load="setTimeout(() => document.getElementById('toast-{{ id }}').remove(), 5000)"
 >
  <div class="neo-icon-box w-10 h-10 p-0 flex-shrink-0 {% if type == 'error' %}bg-neo-accent{% else %}bg-neo-secondary{% endif %}">
  {% if type == 'error' %}
@@ -19,5 +19,13 @@
  >
  <i data-lucide="x" class="w-4 h-4"></i>
  </button>
- <script>lucide.createIcons();</script>
+ <script>
+ (function () {
+ lucide.createIcons();
+ setTimeout(function () {
+ var el = document.getElementById("toast-{{ id }}");
+ if (el) el.remove();
+ }, 5000);
+ })();
+ </script>
 </div>

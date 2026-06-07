@@ -1,13 +1,13 @@
 from django import forms
 
+from apps.common.forms import (
+    NEO_CHECKBOX_CLASS,
+    NEO_INPUT_CLASS,
+    NEO_SELECT_CLASS,
+)
 from apps.streaming.models import StreamingSource
 
 from .models import UserSettings
-
-_FIELD_CLASS = (
-    "neo-input w-full text-base h-14 "
-    "focus:outline-none focus-visible:ring-0"
-)
 
 
 class UserSettingsForm(forms.ModelForm):
@@ -25,18 +25,12 @@ class UserSettingsForm(forms.ModelForm):
             "ignore_watching_limit": "When enabled, the dashboard will not show limit warnings after you dismiss them.",
         }
         widgets = {
-            "preferred_source": forms.Select(attrs={"class": _FIELD_CLASS}),
+            "preferred_source": forms.Select(attrs={"class": NEO_SELECT_CLASS}),
             "max_watching_limit": forms.NumberInput(
-                attrs={"class": _FIELD_CLASS, "min": 0}
+                attrs={"class": NEO_INPUT_CLASS, "min": 0}
             ),
             "ignore_watching_limit": forms.CheckboxInput(
-                attrs={
-                    "class": (
-                        "w-6 h-6 rounded-none border-4 border-black bg-neo-white "
-                        "text-neo-ink accent-neo-accent focus-visible:ring-2 "
-                        "focus-visible:ring-black focus-visible:ring-offset-2"
-                    )
-                }
+                attrs={"class": NEO_CHECKBOX_CLASS}
             ),
         }
 

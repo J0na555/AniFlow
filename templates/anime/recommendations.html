@@ -25,7 +25,7 @@
  </div>
  </div>
  <h3 class="font-bold text-base line-clamp-2 group-hover:text-accent transition-colors leading-tight px-2">{{ recommendation.title }}</h3>
- <p class="text-xs font-bold text-neo-ink/80 mt-2 font-bold uppercase tracking-widest px-2">
+ <p class="text-xs font-bold text-neo-ink/80 mt-2 uppercase tracking-widest px-2">
  {% if recommendation.episodes %}{{ recommendation.episodes }} episodes{% else %}Movie{% endif %}
  </p>
  </a>
@@ -36,7 +36,7 @@
  <div class="w-24 h-24 bg-neo-white border-4 border-black flex items-center justify-center mx-auto mb-8">
  <i data-lucide="sparkles" class="w-12 h-12 font-bold text-neo-ink/80"></i>
  </div>
- <p class="text-lg font-bold text-neo-ink/80 font-medium">{{ recommendations.message|default:"No recommendations are available from AniList yet." }}</p>
+ <p class="text-lg font-bold text-neo-ink/80">{{ recommendations.message|default:"No recommendations are available from AniList yet." }}</p>
  </div>
 {% endif %}
 {% endblock %}

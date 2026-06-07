@@ -192,6 +192,18 @@ class UpdateStatusViewTests(TestCase):
         self.user_anime.refresh_from_db()
         self.assertEqual(self.user_anime.status, "dropped")
 
+    def test_update_status_from_dashboard_appends_success_toast(self) -> None:
+        response = self.client.post(
+            reverse("anime_status", args=[self.anime.id]),
+            {"status": "dropped"},
+            HTTP_HX_REQUEST="true",
+            HTTP_REFERER="http://testserver/",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="toast-container" hx-swap-oob="beforeend"')
+        self.assertContains(response, "List status updated.")
+        self.assertContains(response, "check-circle")
+
     def test_update_status_respects_watching_limit(self) -> None:
         settings, _ = UserSettings.objects.get_or_create(user=self.user)
         settings.max_watching_limit = 1
@@ -214,8 +226,77 @@ class UpdateStatusViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Watching Limit Reached")
+        self.assertContains(response, 'id="toast-container" hx-swap-oob="beforeend"')
+        self.assertContains(response, "alert-circle")
         planning = UserAnime.objects.get(user=self.user, anime=other)
         self.assertEqual(planning.status, "planning")
+
+
+class ToastFeedbackViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="toast-user",
+            password="password123",
+        )
+        self.client.force_login(self.user)
+        self.anime = Anime.objects.create(
+            tracker_type="anilist",
+            tracker_id="611",
+            title_english="Toast Target",
+            episodes=12,
+        )
+        self.user_anime = UserAnime.objects.create(
+            user=self.user,
+            anime=self.anime,
+            status="watching",
+            progress=3,
+        )
+
+    @patch("apps.anime.views.tracker_update_progress")
+    def test_progress_plus_one_appends_success_toast(self, mock_update) -> None:
+        mock_update.return_value = {"progress": 4, "status": "CURRENT"}
+
+        response = self.client.post(
+            reverse("anime_progress", args=[self.anime.id]),
+            {"progress": "4"},
+            HTTP_HX_REQUEST="true",
+            HTTP_REFERER="http://testserver/",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="toast-container" hx-swap-oob="beforeend"')
+        self.assertContains(response, "Marked episode 4 watched.")
+        self.assertContains(response, "check-circle")
+
+    @patch("apps.anime.views.sync_user_list")
+    def test_sync_list_appends_success_toast(self, _mock_sync) -> None:
+        response = self.client.post(
+            reverse("sync_list"),
+            HTTP_HX_REQUEST="true",
+            HTTP_REFERER="http://testserver/",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="toast-container" hx-swap-oob="beforeend"')
+        self.assertContains(response, "AniList synced successfully!")
+
+    def test_ignore_watching_limit_appends_success_toast(self) -> None:
+        response = self.client.post(
+            reverse("ignore_watching_limit"),
+            HTTP_HX_REQUEST="true",
+            HTTP_REFERER="http://testserver/",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="toast-container" hx-swap-oob="beforeend"')
+        self.assertContains(response, "Watching-limit warnings disabled.")
+
+    @patch("apps.anime.views.sync_user_list")
+    def test_sync_list_without_htmx_redirects(self, _mock_sync) -> None:
+        response = self.client.post(reverse("sync_list"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("dashboard"))
 
 
 class DashboardAuthTemplateTests(TestCase):
