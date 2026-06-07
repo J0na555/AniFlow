@@ -2,9 +2,10 @@
 
 <!-- Productivity Overview -->
 <div id="productivity-overview" class="mb-16" {% if oob %}hx-swap-oob="true"{% endif %}>
- <div class="flex items-center gap-2 mb-6">
+ <div class="flex items-center gap-3 mb-6">
+ <span class="neo-section-number">// 01</span>
  <div class="neo-section-title-bar"></div>
- <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Productivity</h2>
+ <h2 class="neo-section-title-text">Productivity</h2>
  </div>
  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
  <div class="card-base bg-neo-accent p-8 flex flex-col justify-between h-40 relative group overflow-hidden">
@@ -56,9 +57,10 @@
 <!-- Continue Watching (Hero + Grid) -->
 <div id="continue-watching" class="mb-16" {% if oob %}hx-swap-oob="true"{% endif %}>
  <div class="flex items-center justify-between mb-8">
- <div class="flex items-center gap-2">
+ <div class="flex items-center gap-3">
+ <span class="neo-section-number">// 02</span>
  <div class="neo-section-title-bar"></div>
- <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Continue Watching</h2>
+ <h2 class="neo-section-title-text">Continue Watching</h2>
  </div>
  <a href="{% url 'watching_list' %}" class="flex items-center gap-2 text-xs font-bold neo-link">
  View All
@@ -148,21 +150,17 @@
  </div>
  </div>
  {% else %}
- <div class="card-base p-16 text-center ">
- <div class="w-20 h-20 bg-neo-white border-4 border-black flex items-center justify-center mx-auto mb-6">
- <i data-lucide="play-circle" class="w-10 h-10 font-bold text-neo-ink/80"></i>
- </div>
- <p class="font-bold text-neo-ink/80">No active shows yet. Start watching something!</p>
- </div>
+ {% include "partials/empty_state.html" with icon="play-circle" title="No active shows yet" body="Start watching something and it will show up here." cta_url="anime_search" cta_text="Search Anime" cta_icon="search" compact=True padding="p-12" %}
  {% endif %}
 </div>
 
 <!-- Weekly Releases Summary -->
 <div id="weekly-releases" class="mb-16" {% if oob %}hx-swap-oob="true"{% endif %}>
  <div class="flex items-center justify-between mb-8">
- <div class="flex items-center gap-2">
+ <div class="flex items-center gap-3">
+ <span class="neo-section-number">// 03</span>
  <div class="neo-section-title-bar"></div>
- <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Weekly Releases</h2>
+ <h2 class="neo-section-title-text">Weekly Releases</h2>
  </div>
  <a href="{% url 'weekly_releases' %}" class="flex items-center gap-2 text-xs font-bold neo-link">
  View All
@@ -205,9 +203,10 @@
 <!-- Recommendations Summary -->
 <div id="recommendations" class="mb-16" {% if oob %}hx-swap-oob="true"{% endif %}>
  <div class="flex items-center justify-between mb-8">
- <div class="flex items-center gap-2">
+ <div class="flex items-center gap-3">
+ <span class="neo-section-number">// 04</span>
  <div class="neo-section-title-bar"></div>
- <h2 class="text-sm font-bold text-neo-ink uppercase tracking-[0.2em]">Recommendations</h2>
+ <h2 class="neo-section-title-text">Recommendations</h2>
  </div>
  <a href="{% url 'recommendations' %}" class="flex items-center gap-2 text-xs font-bold neo-link">
  View All

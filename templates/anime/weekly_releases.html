@@ -36,11 +36,6 @@
  {% endfor %}
  </div>
 {% else %}
- <div class="card-base p-24 text-center ">
- <div class="w-24 h-24 bg-neo-white border-4 border-black flex items-center justify-center mx-auto mb-8">
- <i data-lucide="calendar" class="w-12 h-12 font-bold text-neo-ink/80"></i>
- </div>
- <p class="text-lg font-bold text-neo-ink/80">{{ weekly_releases.message|default:"No upcoming releases were found for this week." }}</p>
- </div>
+ {% include "partials/empty_state.html" with icon="calendar" title="Nothing airing this week" body=weekly_releases.message|default:"No upcoming releases were found for this week. Check back soon or add more shows to your list." cta_url="watching_list" cta_text="Go to Watching" cta_icon="play-circle" %}
 {% endif %}
 {% endblock %}

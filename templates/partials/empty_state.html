@@ -1,0 +1,36 @@
+{% comment %}
+Reusable neo-brutalist empty state.
+
+Params (all optional except title):
+  icon         lucide icon name (default: "inbox")
+  title        heading text (required)
+  body         supporting copy
+  cta_url      url name for the call-to-action button
+  cta_text     button label (default: "Explore")
+  cta_icon     lucide icon for the button
+  chips        list of {label} suggestion chips, each linking to cta_url with ?q=label
+  padding      override outer padding utility (default: "p-16 sm:p-24")
+  compact      truthy to shrink icon + spacing for inline sections
+{% endcomment %}
+<div class="card-base {{ padding|default:'p-16 sm:p-24' }} text-center">
+  <div class="{% if compact %}w-16 h-16 mb-6{% else %}w-24 h-24 mb-8{% endif %} bg-neo-secondary border-4 border-black flex items-center justify-center mx-auto neo-shadow-md -rotate-3">
+    <i data-lucide="{{ icon|default:'inbox' }}" class="{% if compact %}w-8 h-8{% else %}w-12 h-12{% endif %} text-neo-ink"></i>
+  </div>
+  <h3 class="{% if compact %}text-xl{% else %}text-2xl sm:text-3xl{% endif %} font-display uppercase tracking-tight mb-4">{{ title }}</h3>
+  {% if body %}
+  <p class="font-medium text-neo-ink/70 max-w-md mx-auto {% if cta_url or chips %}mb-8{% endif %}">{{ body }}</p>
+  {% endif %}
+  {% if chips %}
+  <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+    {% for chip in chips %}
+    <a href="{% url cta_url|default:'anime_search' %}?q={{ chip|urlencode }}" class="neo-badge-muted hover:bg-neo-secondary transition-colors">{{ chip }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if cta_url %}
+  <a href="{% url cta_url %}" class="neo-btn-primary !h-14">
+    {% if cta_icon %}<i data-lucide="{{ cta_icon }}" class="w-5 h-5"></i>{% endif %}
+    {{ cta_text|default:"Explore" }}
+  </a>
+  {% endif %}
+</div>
