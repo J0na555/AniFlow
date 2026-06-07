@@ -29,6 +29,7 @@ urlpatterns = [
     ),
     path("search/", views.search_anime, name="anime_search"),
     path("anime/add/", views.add_to_library_view, name="anime_add_to_library"),
+    path("library/", views.library_list, name="library_list"),
     path("watching/", views.watching_list, name="watching_list"),
     path("completed/", views.completed_list, name="completed_list"),
     path("releases/", views.weekly_releases_page, name="weekly_releases"),

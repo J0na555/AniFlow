@@ -6,14 +6,11 @@
 <a href="{% url 'anime_search' %}" class="neo-nav-item{% if variant == 'mobile' %} w-full{% endif %}{% if active == 'anime_search' %} active{% endif %}">
   <i data-lucide="search" class="w-5 h-5"></i><span>Search</span>
 </a>
-<a href="{% url 'watching_list' %}" class="neo-nav-item{% if variant == 'mobile' %} w-full{% endif %}{% if active == 'watching_list' %} active{% endif %}">
-  <i data-lucide="play-circle" class="w-5 h-5"></i><span>Watching</span>
+<a href="{% url 'library_list' %}" class="neo-nav-item{% if variant == 'mobile' %} w-full{% endif %}{% if active == 'library_list' %} active{% endif %}">
+  <i data-lucide="library" class="w-5 h-5"></i><span>Library</span>
 </a>
 <a href="{% url 'weekly_releases' %}" class="neo-nav-item{% if variant == 'mobile' %} w-full{% endif %}{% if active == 'weekly_releases' %} active{% endif %}">
   <i data-lucide="calendar" class="w-5 h-5"></i><span>Weekly Releases</span>
-</a>
-<a href="{% url 'completed_list' %}" class="neo-nav-item{% if variant == 'mobile' %} w-full{% endif %}{% if active == 'completed_list' %} active{% endif %}">
-  <i data-lucide="check-circle" class="w-5 h-5"></i><span>Completed</span>
 </a>
 <a href="{% url 'recommendations' %}" class="neo-nav-item{% if variant == 'mobile' %} w-full{% endif %}{% if active == 'recommendations' %} active{% endif %}">
   <i data-lucide="sparkles" class="w-5 h-5"></i><span>Recommendations</span>

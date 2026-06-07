@@ -4,7 +4,7 @@ import uuid
 from urllib.parse import urlparse
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.db import connection
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -441,30 +441,71 @@ def search_anime(request):
     return render(request, "anime/search.html", context)
 
 
+# Tab display order for the unified library page (lifecycle: active first, ended last).
+LIBRARY_TAB_ORDER = (
+    "planning",
+    "watching",
+    "paused",
+    "completed",
+    "repeating",
+    "dropped",
+)
+DEFAULT_LIBRARY_STATUS = "watching"
+
+
 @login_required
-def watching_list(request):
-    entries = UserAnime.objects.filter(user=request.user, status="watching").select_related("anime").order_by("-updated_at")
+def library_list(request):
+    valid_statuses = {value for value, _ in UserAnime.STATUS_CHOICES}
+    status = (request.GET.get("status") or "").strip().lower()
+    if status not in valid_statuses:
+        status = DEFAULT_LIBRARY_STATUS
+
+    base_qs = UserAnime.objects.filter(user=request.user)
+    counts = {
+        row["status"]: row["count"]
+        for row in base_qs.values("status").annotate(count=Count("id"))
+    }
+
+    labels = dict(UserAnime.STATUS_CHOICES)
+    tabs = [
+        {
+            "status": value,
+            "label": labels.get(value, value.title()),
+            "count": counts.get(value, 0),
+            "active": value == status,
+        }
+        for value in LIBRARY_TAB_ORDER
+        if value in labels
+    ]
+
+    entries = (
+        base_qs.filter(status=status)
+        .select_related("anime")
+        .order_by("-updated_at")
+    )
+
     return render(
         request,
-        "anime/watching.html",
+        "anime/library.html",
         {
-            "watching_entries": entries,
+            "entries": entries,
+            "current_status": status,
+            "current_label": labels.get(status, status.title()),
+            "tabs": tabs,
+            "total_count": sum(counts.values()),
             "library_status_choices": UserAnime.STATUS_CHOICES,
         },
     )
+
+
+@login_required
+def watching_list(request):
+    return redirect(f"{reverse('library_list')}?status=watching")
 
 
 @login_required
 def completed_list(request):
-    entries = UserAnime.objects.filter(user=request.user, status="completed").select_related("anime").order_by("-updated_at")
-    return render(
-        request,
-        "anime/completed.html",
-        {
-            "completed_entries": entries,
-            "library_status_choices": UserAnime.STATUS_CHOICES,
-        },
-    )
+    return redirect(f"{reverse('library_list')}?status=completed")
 
 
 @login_required
